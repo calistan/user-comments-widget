@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Widget Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 32px;
+            font-size: 18px;
+        }
+        
+        .demo-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .demo-section h2 {
+            color: #374151;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .demo-section p {
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .demo-btn {
+            padding: 10px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .demo-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .demo-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .demo-btn.primary:hover {
+            background: #00a58e;
+            border-color: #00a58e;
+        }
+        
+        .config-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .config-row label {
+            min-width: 120px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .config-row select,
+        .config-row input {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>Feedback Widget Demo</h1>
+        <p class="subtitle">Test the embeddable feedback widget with different configurations</p>
+        
+        <div class="demo-section">
+            <h2>Widget Controls</h2>
+            <p>Use these buttons to test the widget functionality:</p>
+            <div class="demo-controls">
+                <button class="demo-btn primary" onclick="FeedbackWidget.open()">Open Widget</button>
+                <button class="demo-btn" onclick="FeedbackWidget.close()">Close Widget</button>
+                <button class="demo-btn" onclick="reinitializeWidget()">Reinitialize</button>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Configuration Options</h2>
+            <p>Customize the widget appearance and behavior:</p>
+            
+            <div class="config-section">
+                <div class="config-row">
+                    <label>Position:</label>
+                    <select id="position">
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="top-right">Top Right</option>
+                        <option value="top-left">Top Left</option>
+                    </select>
+                </div>
+                
+                <div class="config-row">
+                    <label>Primary Color:</label>
+                    <input type="color" id="primaryColor" value="#00C2A8">
+                </div>
+                
+                <div class="config-row">
+                    <label>Title:</label>
+                    <input type="text" id="title" value="Feedback" placeholder="Widget title">
+                </div>
+                
+                <div class="config-row">
+                    <label>Placeholder:</label>
+                    <input type="text" id="placeholder" value="Share your feedback..." placeholder="Comment placeholder">
+                </div>
+                
+                <div class="config-row">
+                    <label>Show Name Field:</label>
+                    <input type="checkbox" id="showName" checked>
+                </div>
+                
+                <div class="config-row">
+                    <label>Show Email Field:</label>
+                    <input type="checkbox" id="showEmail" checked>
+                </div>
+                
+                <button class="demo-btn primary" onclick="updateWidget()">Apply Changes</button>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Integration Code</h2>
+            <p>Copy this code to embed the widget on any website:</p>
+            
+            <div class="code-block">
+&lt;!-- Add this before closing &lt;/body&gt; tag --&gt;<br>
+&lt;script src="<span class="highlight">path/to/widget.js</span>"&gt;&lt;/script&gt;<br>
+&lt;script&gt;<br>
+&nbsp;&nbsp;FeedbackWidget.init({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;position: '<span id="code-position">bottom-right</span>',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;primaryColor: '<span id="code-color">#00C2A8</span>',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title: '<span id="code-title">Feedback</span>',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;placeholder: '<span id="code-placeholder">Share your feedback...</span>',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;showName: <span id="code-name">true</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;showEmail: <span id="code-email">true</span><br>
+&nbsp;&nbsp;});<br>
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Features Implemented</h2>
+            <ul style="color: #374151; line-height: 1.8;">
+                <li>✅ Self-contained JavaScript widget with namespace isolation</li>
+                <li>✅ Floating feedback button with customizable position</li>
+                <li>✅ Slide-out feedback form panel with smooth animations</li>
+                <li>✅ Form fields: Comment (required), Name (optional), Email (optional)</li>
+                <li>✅ Auto-detection of website domain</li>
+                <li>✅ Responsive design for mobile and desktop</li>
+                <li>✅ Dark theme support</li>
+                <li>✅ Keyboard accessibility (ESC to close)</li>
+                <li>✅ Click outside to close functionality</li>
+                <li>✅ Loading states and success/error messages</li>
+                <li>✅ CSS reset to prevent host site style conflicts</li>
+                <li>✅ Customizable colors, position, and text</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget with default settings
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Feedback',
+            placeholder: 'Share your feedback...',
+            showName: true,
+            showEmail: true
+        });
+        
+        // Demo functions
+        function updateWidget() {
+            const position = document.getElementById('position').value;
+            const primaryColor = document.getElementById('primaryColor').value;
+            const title = document.getElementById('title').value;
+            const placeholder = document.getElementById('placeholder').value;
+            const showName = document.getElementById('showName').checked;
+            const showEmail = document.getElementById('showEmail').checked;
+            
+            // Remove existing widget
+            const existingContainer = document.getElementById('feedback-widget-container');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+            
+            // Remove existing styles
+            const existingStyles = document.getElementById('feedback-widget-styles');
+            if (existingStyles) {
+                existingStyles.remove();
+            }
+            
+            // Reinitialize with new config
+            FeedbackWidget.init({
+                position,
+                primaryColor,
+                title,
+                placeholder,
+                showName,
+                showEmail
+            });
+            
+            // Update code example
+            updateCodeExample();
+        }
+        
+        function reinitializeWidget() {
+            updateWidget();
+        }
+        
+        function updateCodeExample() {
+            document.getElementById('code-position').textContent = document.getElementById('position').value;
+            document.getElementById('code-color').textContent = document.getElementById('primaryColor').value;
+            document.getElementById('code-title').textContent = document.getElementById('title').value;
+            document.getElementById('code-placeholder').textContent = document.getElementById('placeholder').value;
+            document.getElementById('code-name').textContent = document.getElementById('showName').checked;
+            document.getElementById('code-email').textContent = document.getElementById('showEmail').checked;
+        }
+        
+        // Initialize code example
+        updateCodeExample();
+    </script>
+</body>
+</html>
