@@ -83,12 +83,16 @@
      * Create the floating feedback button
      */
     function createFeedbackButton() {
-        const button = document.createElement('div');
+        const button = document.createElement('button');
         button.id = 'feedback-widget-button';
         button.className = `feedback-widget-button feedback-widget-${config.position}`;
+        button.type = 'button';
+        button.setAttribute('aria-label', `Open ${config.title} panel`);
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-haspopup', 'dialog');
         button.innerHTML = `
             <div class="feedback-widget-button-content">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M8 12H16M8 8H16M8 16H12M21 12C21 16.9706 16.9706 21 12 21C10.2 21 8.5 20.5 7 19.6L3 21L4.4 17C3.5 15.5 3 13.8 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <span class="feedback-widget-button-text">${config.title}</span>
@@ -104,13 +108,17 @@
         const panel = document.createElement('div');
         panel.id = 'feedback-widget-panel';
         panel.className = `feedback-widget-panel feedback-widget-${config.position}`;
-        
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
+        panel.setAttribute('aria-labelledby', 'feedback-widget-title');
+        panel.setAttribute('aria-hidden', 'true');
+
         panel.innerHTML = `
             <div class="feedback-widget-panel-content">
                 <div class="feedback-widget-header">
-                    <h3 class="feedback-widget-title">${config.title}</h3>
-                    <button type="button" class="feedback-widget-close" id="feedback-widget-close">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <h3 class="feedback-widget-title" id="feedback-widget-title">${config.title}</h3>
+                    <button type="button" class="feedback-widget-close" id="feedback-widget-close" aria-label="Close feedback panel">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
@@ -209,63 +217,134 @@
      * Set up event listeners
      */
     function setupEventListeners() {
-        // Button click to open panel
-        feedbackButton.addEventListener('click', openPanel);
-        
+        // Button click to toggle panel
+        feedbackButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isOpen) {
+                closePanel();
+            } else {
+                openPanel();
+            }
+        });
+
         // Close button
         const closeBtn = document.getElementById('feedback-widget-close');
-        closeBtn.addEventListener('click', closePanel);
-        
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePanel();
+        });
+
         // Cancel button
         const cancelBtn = document.getElementById('feedback-widget-cancel');
-        cancelBtn.addEventListener('click', closePanel);
-        
+        cancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePanel();
+        });
+
         // Form submission
         const form = document.getElementById('feedback-widget-form');
         form.addEventListener('submit', handleFormSubmit);
-        
-        // ESC key to close
+
+        // ESC key to close with improved accessibility
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && isOpen) {
+                e.preventDefault();
                 closePanel();
+                // Return focus to the feedback button
+                feedbackButton.focus();
             }
         });
-        
-        // Click outside to close
+
+        // Click outside to close with improved detection
         document.addEventListener('click', function(e) {
             if (isOpen && !widgetContainer.contains(e.target)) {
                 closePanel();
             }
         });
+
+        // Prevent clicks inside the panel from closing it
+        feedbackPanel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Handle focus trapping when panel is open
+        document.addEventListener('keydown', handleFocusTrapping);
     }
     
     /**
      * Open the feedback panel
      */
     function openPanel() {
+        if (isOpen) return; // Prevent multiple opens
+
         isOpen = true;
+
+        // Prevent body scroll
+        preventBodyScroll(true);
+
+        // Add ARIA attributes for accessibility
+        feedbackPanel.setAttribute('aria-hidden', 'false');
+        feedbackButton.setAttribute('aria-expanded', 'true');
+
+        // Add classes for animation
         feedbackPanel.classList.add('feedback-widget-panel-open');
         feedbackButton.classList.add('feedback-widget-button-hidden');
-        
-        // Focus on comment field
+
+        // Store the previously focused element
+        window.feedbackWidgetPreviousFocus = document.activeElement;
+
+        // Focus on comment field with proper timing
         setTimeout(() => {
             const commentField = document.getElementById('feedback-widget-comment');
             if (commentField) {
                 commentField.focus();
             }
-        }, 300);
+        }, 350); // Slightly longer to ensure animation completes
+
+        // Dispatch custom event
+        dispatchWidgetEvent('opened');
     }
-    
+
     /**
      * Close the feedback panel
      */
     function closePanel() {
+        if (!isOpen) return; // Prevent multiple closes
+
         isOpen = false;
+
+        // Restore body scroll
+        preventBodyScroll(false);
+
+        // Update ARIA attributes
+        feedbackPanel.setAttribute('aria-hidden', 'true');
+        feedbackButton.setAttribute('aria-expanded', 'false');
+
+        // Remove classes for animation
         feedbackPanel.classList.remove('feedback-widget-panel-open');
         feedbackButton.classList.remove('feedback-widget-button-hidden');
-        
-        // Reset form and messages
-        resetForm();
+
+        // Restore focus to previously focused element or feedback button
+        setTimeout(() => {
+            if (window.feedbackWidgetPreviousFocus &&
+                document.contains(window.feedbackWidgetPreviousFocus)) {
+                window.feedbackWidgetPreviousFocus.focus();
+            } else {
+                feedbackButton.focus();
+            }
+            window.feedbackWidgetPreviousFocus = null;
+        }, 100);
+
+        // Reset form and messages after animation
+        setTimeout(() => {
+            resetForm();
+        }, 300);
+
+        // Dispatch custom event
+        dispatchWidgetEvent('closed');
     }
     
     /**
@@ -366,6 +445,76 @@
     }
 
     /**
+     * Prevent or restore body scroll
+     */
+    function preventBodyScroll(prevent) {
+        if (prevent) {
+            // Store current scroll position
+            window.feedbackWidgetScrollY = window.scrollY;
+
+            // Apply styles to prevent scroll
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${window.feedbackWidgetScrollY}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Restore scroll
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+
+            // Restore scroll position
+            if (typeof window.feedbackWidgetScrollY === 'number') {
+                window.scrollTo(0, window.feedbackWidgetScrollY);
+                window.feedbackWidgetScrollY = null;
+            }
+        }
+    }
+
+    /**
+     * Handle focus trapping within the widget when open
+     */
+    function handleFocusTrapping(e) {
+        if (!isOpen || e.key !== 'Tab') return;
+
+        const focusableElements = feedbackPanel.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === firstFocusable) {
+                e.preventDefault();
+                lastFocusable.focus();
+            }
+        } else {
+            // Tab
+            if (document.activeElement === lastFocusable) {
+                e.preventDefault();
+                firstFocusable.focus();
+            }
+        }
+    }
+
+    /**
+     * Dispatch custom widget events
+     */
+    function dispatchWidgetEvent(eventType) {
+        const event = new CustomEvent(`feedbackWidget:${eventType}`, {
+            detail: {
+                widget: 'feedback',
+                timestamp: Date.now(),
+                config: config
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+    /**
      * Inject CSS styles into the page
      */
     function injectCSS() {
@@ -400,11 +549,12 @@
                 z-index: 1000000;
                 background: ${config.primaryColor};
                 color: white;
+                border: none;
                 border-radius: 50px;
                 padding: 12px 20px;
                 cursor: pointer;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                transition: all 0.3s ease;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 pointer-events: auto;
                 user-select: none;
                 font-size: 14px;
@@ -416,9 +566,19 @@
                 box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             }
 
+            .feedback-widget-button:focus {
+                outline: none;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 3px ${config.primaryColor}40;
+            }
+
+            .feedback-widget-button:active {
+                transform: translateY(0);
+                transition-duration: 0.1s;
+            }
+
             .feedback-widget-button-hidden {
                 opacity: 0;
-                transform: scale(0.8);
+                transform: scale(0.8) translateY(-2px);
                 pointer-events: none;
             }
 
@@ -466,14 +626,19 @@
                 overflow: hidden;
                 transform: scale(0.8) translateY(20px);
                 opacity: 0;
-                transition: all 0.3s ease;
+                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
                 pointer-events: none;
+                will-change: transform, opacity;
             }
 
             .feedback-widget-panel-open {
                 transform: scale(1) translateY(0);
                 opacity: 1;
                 pointer-events: auto;
+            }
+
+            .feedback-widget-panel:focus-within {
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px ${config.primaryColor}40;
             }
 
             /* Panel positioning */

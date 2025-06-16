@@ -222,12 +222,37 @@
                 <li>✅ Auto-detection of website domain</li>
                 <li>✅ Responsive design for mobile and desktop</li>
                 <li>✅ Dark theme support</li>
-                <li>✅ Keyboard accessibility (ESC to close)</li>
-                <li>✅ Click outside to close functionality</li>
+                <li>✅ <strong>Enhanced keyboard accessibility (ESC to close, focus trapping)</strong></li>
+                <li>✅ <strong>Improved click outside to close functionality</strong></li>
+                <li>✅ <strong>Body scroll prevention when widget is open</strong></li>
+                <li>✅ <strong>Smooth toggle animations with cubic-bezier easing</strong></li>
+                <li>✅ <strong>ARIA attributes for screen readers</strong></li>
+                <li>✅ <strong>Focus management and restoration</strong></li>
+                <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed)</strong></li>
                 <li>✅ Loading states and success/error messages</li>
                 <li>✅ CSS reset to prevent host site style conflicts</li>
                 <li>✅ Customizable colors, position, and text</li>
             </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>Accessibility Features</h2>
+            <ul style="color: #374151; line-height: 1.8;">
+                <li>🔍 <strong>Screen Reader Support:</strong> ARIA labels, roles, and properties</li>
+                <li>⌨️ <strong>Keyboard Navigation:</strong> Tab, Shift+Tab, and ESC key support</li>
+                <li>🎯 <strong>Focus Management:</strong> Focus trapping within widget when open</li>
+                <li>🔄 <strong>Focus Restoration:</strong> Returns focus to trigger element when closed</li>
+                <li>🚫 <strong>Scroll Prevention:</strong> Prevents background scrolling when widget is open</li>
+                <li>📱 <strong>Mobile Friendly:</strong> Touch-friendly targets and responsive design</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>Event Monitoring</h2>
+            <p>The widget dispatches custom events that you can listen to:</p>
+            <div id="event-log" style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; max-height: 150px; overflow-y: auto;">
+                <div style="color: #6b7280;">Event log will appear here...</div>
+            </div>
         </div>
     </div>
 
@@ -294,6 +319,47 @@
         
         // Initialize code example
         updateCodeExample();
+
+        // Set up event monitoring
+        setupEventMonitoring();
+
+        function setupEventMonitoring() {
+            const eventLog = document.getElementById('event-log');
+
+            function logEvent(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.style.color = '#374151';
+                logEntry.innerHTML = `<span style="color: #6b7280;">[${timestamp}]</span> ${message}`;
+
+                // Clear placeholder text
+                if (eventLog.children.length === 1 && eventLog.children[0].textContent.includes('Event log will appear here')) {
+                    eventLog.innerHTML = '';
+                }
+
+                eventLog.appendChild(logEntry);
+                eventLog.scrollTop = eventLog.scrollHeight;
+
+                // Keep only last 10 entries
+                while (eventLog.children.length > 10) {
+                    eventLog.removeChild(eventLog.firstChild);
+                }
+            }
+
+            // Listen for widget events
+            window.addEventListener('feedbackWidget:opened', function(e) {
+                logEvent('🟢 Widget opened');
+                console.log('Feedback widget opened:', e.detail);
+            });
+
+            window.addEventListener('feedbackWidget:closed', function(e) {
+                logEvent('🔴 Widget closed');
+                console.log('Feedback widget closed:', e.detail);
+            });
+
+            // Log initial state
+            logEvent('📡 Event monitoring started');
+        }
     </script>
 </body>
 </html>
