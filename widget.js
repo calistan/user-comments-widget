@@ -51,6 +51,11 @@
     let lastSubmissionTime = 0;
     let submissionCount = 0;
     let isSubmitting = false;
+
+    // Retry logic state
+    let retryAttempts = 0;
+    const MAX_RETRY_ATTEMPTS = 3;
+    const RETRY_DELAYS = [1000, 2000, 4000]; // Progressive delays in ms
     
     /**
      * Initialize the feedback widget
@@ -738,29 +743,56 @@
             user_agent: '[REDACTED]' // Don't log full user agent
         });
 
-        // Submit to backend with timeout
+        // Submit to backend with CORS handling and retry logic
+        submitWithRetry(data);
+    }
+
+    /**
+     * Submit data with retry logic and CORS handling
+     */
+    function submitWithRetry(data, attemptNumber = 0) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        fetch(config.apiUrl, {
+        // Enhanced headers for CORS and better compatibility
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest', // Helps with CORS preflight
+            'X-Widget-Version': data.widget_version || '1.0.0',
+            'X-Widget-Origin': config.websiteDomain || 'unknown'
+        };
+
+        // Add CORS mode and credentials handling
+        const fetchOptions = {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify(data),
-            signal: controller.signal
-        })
+            signal: controller.signal,
+            mode: 'cors', // Explicitly set CORS mode
+            credentials: 'omit', // Don't send cookies for security
+            cache: 'no-cache' // Prevent caching of submissions
+        };
+
+        console.log(`[FeedbackWidget] Submission attempt ${attemptNumber + 1}/${MAX_RETRY_ATTEMPTS + 1}`);
+
+        fetch(config.apiUrl, fetchOptions)
         .then(response => {
             clearTimeout(timeoutId);
 
+            // Handle CORS errors
             if (!response.ok) {
+                if (response.status === 0) {
+                    throw new Error('CORS_ERROR: Cross-origin request blocked');
+                }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             return response.json();
         })
         .then(result => {
+            // Success - reset retry counter and show success
+            retryAttempts = 0;
             isSubmitting = false;
             showLoading(false);
 
@@ -773,6 +805,7 @@
             // Dispatch success event
             dispatchWidgetEvent('submitted', {
                 success: true,
+                attempt: attemptNumber + 1,
                 data: {
                     comment: data.comment,
                     name: data.name,
@@ -782,34 +815,122 @@
         })
         .catch(error => {
             clearTimeout(timeoutId);
-            isSubmitting = false;
-            showLoading(false);
 
-            let errorMessage = 'Failed to submit feedback. Please try again.';
+            console.error(`[FeedbackWidget] Submission attempt ${attemptNumber + 1} failed:`, error);
 
-            if (error.name === 'AbortError') {
-                errorMessage = 'Request timed out. Please check your connection and try again.';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your connection and try again.';
-            } else if (error.message.includes('HTTP 429')) {
-                errorMessage = 'Too many requests. Please wait a moment and try again.';
-            } else if (error.message.includes('HTTP 5')) {
-                errorMessage = 'Server error. Please try again later.';
+            // Determine if we should retry
+            const shouldRetry = shouldRetrySubmission(error, attemptNumber);
+
+            if (shouldRetry) {
+                const delay = RETRY_DELAYS[attemptNumber] || 4000;
+                console.log(`[FeedbackWidget] Retrying in ${delay}ms...`);
+
+                // Show retry message to user
+                showRetryMessage(attemptNumber + 1, MAX_RETRY_ATTEMPTS + 1);
+
+                setTimeout(() => {
+                    submitWithRetry(data, attemptNumber + 1);
+                }, delay);
+            } else {
+                // All retries exhausted or non-retryable error
+                retryAttempts = 0;
+                isSubmitting = false;
+                showLoading(false);
+
+                const errorMessage = getErrorMessage(error, attemptNumber);
+                showError(errorMessage);
+
+                // Dispatch error event
+                dispatchWidgetEvent('submitError', {
+                    error: error.message,
+                    attempts: attemptNumber + 1,
+                    finalError: true,
+                    data: {
+                        comment: data.comment,
+                        name: data.name,
+                        email: data.email ? '[PROVIDED]' : '[NOT PROVIDED]'
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Determine if submission should be retried based on error type
+     */
+    function shouldRetrySubmission(error, attemptNumber) {
+        // Don't retry if we've exceeded max attempts
+        if (attemptNumber >= MAX_RETRY_ATTEMPTS) {
+            return false;
+        }
+
+        // Retry for network errors, timeouts, and server errors
+        const retryableErrors = [
+            'Failed to fetch', // Network error
+            'AbortError', // Timeout
+            'CORS_ERROR', // CORS issues
+            'HTTP 500', // Server error
+            'HTTP 502', // Bad gateway
+            'HTTP 503', // Service unavailable
+            'HTTP 504', // Gateway timeout
+        ];
+
+        return retryableErrors.some(retryableError =>
+            error.message.includes(retryableError) || error.name === retryableError
+        );
+    }
+
+    /**
+     * Get user-friendly error message based on error type and attempts
+     */
+    function getErrorMessage(error, attemptNumber) {
+        const totalAttempts = attemptNumber + 1;
+
+        if (error.name === 'AbortError') {
+            return `Request timed out after ${totalAttempts} attempt${totalAttempts > 1 ? 's' : ''}. Please check your connection and try again.`;
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS_ERROR')) {
+            return `Network error after ${totalAttempts} attempt${totalAttempts > 1 ? 's' : ''}. Please check your connection and try again.`;
+        } else if (error.message.includes('HTTP 429')) {
+            return 'Too many requests. Please wait a moment and try again.';
+        } else if (error.message.includes('HTTP 4')) {
+            return 'Invalid request. Please check your input and try again.';
+        } else if (error.message.includes('HTTP 5')) {
+            return `Server error after ${totalAttempts} attempt${totalAttempts > 1 ? 's' : ''}. Please try again later.`;
+        } else {
+            return `Failed to submit feedback after ${totalAttempts} attempt${totalAttempts > 1 ? 's' : ''}. Please try again.`;
+        }
+    }
+
+    /**
+     * Show retry message to user
+     */
+    function showRetryMessage(currentAttempt, maxAttempts) {
+        const form = document.getElementById('feedback-widget-form');
+        if (form) {
+            // Create or update retry message
+            let retryMessage = document.getElementById('feedback-widget-retry-message');
+            if (!retryMessage) {
+                retryMessage = document.createElement('div');
+                retryMessage.id = 'feedback-widget-retry-message';
+                retryMessage.className = 'feedback-widget-retry-message';
+                form.appendChild(retryMessage);
             }
 
-            showError(errorMessage);
-            console.error('[FeedbackWidget] Error submitting feedback:', error);
+            retryMessage.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px; color: #f59e0b; font-size: 13px; margin-top: 8px;">
+                    <div class="feedback-widget-spinner" style="width: 12px; height: 12px;"></div>
+                    <span>Retrying... (${currentAttempt}/${maxAttempts})</span>
+                </div>
+            `;
+            retryMessage.style.display = 'block';
 
-            // Dispatch error event
-            dispatchWidgetEvent('submitError', {
-                error: error.message,
-                data: {
-                    comment: data.comment,
-                    name: data.name,
-                    email: data.email ? '[PROVIDED]' : '[NOT PROVIDED]'
+            // Hide retry message after a moment
+            setTimeout(() => {
+                if (retryMessage) {
+                    retryMessage.style.display = 'none';
                 }
-            });
-        });
+            }, 3000);
+        }
     }
     
     /**
@@ -1549,6 +1670,28 @@
                 line-height: 0 !important;
                 outline: none !important;
                 box-shadow: none !important;
+            }
+
+            /* ===== RETRY MESSAGE STYLING ===== */
+            .feedback-widget-retry-message {
+                background: #fffbeb !important;
+                border: 1px solid #fcd34d !important;
+                border-radius: 6px !important;
+                padding: 8px 12px !important;
+                margin-top: 8px !important;
+                font-size: 13px !important;
+                color: #92400e !important;
+                display: none !important;
+                animation: fadeIn 0.3s ease-in-out !important;
+            }
+
+            .feedback-widget-retry-message .feedback-widget-spinner {
+                border: 2px solid #fcd34d !important;
+                border-top: 2px solid #f59e0b !important;
+                border-radius: 50% !important;
+                animation: spin 1s linear infinite !important;
+                display: inline-block !important;
+                flex-shrink: 0 !important;
             }
 
             /* ===== MOBILE-FIRST ACTIONS ===== */

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX Enhancements Test - Feedback Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-btn {
+            padding: 10px 16px;
+            margin: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .test-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .test-btn.primary:hover {
+            background: #00a58e;
+        }
+        
+        .test-btn.danger {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .test-btn.danger:hover {
+            background: #dc2626;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status.warning {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+        
+        .cors-info {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .cors-info h4 {
+            color: #0369a1;
+            margin: 0 0 8px 0;
+        }
+        
+        .cors-info code {
+            background: #e0f2fe;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .retry-demo {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .retry-demo h4 {
+            color: #92400e;
+            margin: 0 0 8px 0;
+        }
+        
+        .test-log {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+        
+        .feature-list {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .feature-list h4 {
+            color: #166534;
+            margin: 0 0 8px 0;
+        }
+        
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .feature-list li {
+            color: #15803d;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 AJAX Enhancements Test</h1>
+        <p>Test the enhanced AJAX submission with CORS handling and retry logic.</p>
+        
+        <div class="test-section">
+            <h3>CORS Handling Test</h3>
+            <p>Test cross-origin request handling and headers:</p>
+            
+            <button class="test-btn primary" onclick="testCORSHeaders()">🌐 Test CORS Headers</button>
+            <button class="test-btn" onclick="inspectRequestHeaders()">🔍 Inspect Request Headers</button>
+            
+            <div class="cors-info">
+                <h4>Enhanced CORS Features:</h4>
+                <ul>
+                    <li><strong>Explicit CORS mode:</strong> <code>mode: 'cors'</code></li>
+                    <li><strong>Security headers:</strong> <code>X-Requested-With</code>, <code>X-Widget-Version</code>, <code>X-Widget-Origin</code></li>
+                    <li><strong>Credential handling:</strong> <code>credentials: 'omit'</code> for security</li>
+                    <li><strong>Cache prevention:</strong> <code>cache: 'no-cache'</code></li>
+                    <li><strong>CORS error detection:</strong> Status 0 handling</li>
+                </ul>
+            </div>
+            
+            <div id="cors-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Retry Logic Test</h3>
+            <p>Test automatic retry for failed submissions:</p>
+            
+            <button class="test-btn danger" onclick="testRetryLogic()">🔄 Test Retry Logic</button>
+            <button class="test-btn" onclick="testNetworkError()">📡 Simulate Network Error</button>
+            <button class="test-btn" onclick="testServerError()">🖥️ Simulate Server Error</button>
+            
+            <div class="retry-demo">
+                <h4>Retry Logic Features:</h4>
+                <ul>
+                    <li><strong>Progressive delays:</strong> 1s → 2s → 4s between retries</li>
+                    <li><strong>Maximum attempts:</strong> 3 retries + initial attempt = 4 total</li>
+                    <li><strong>Smart retry conditions:</strong> Network errors, timeouts, server errors (5xx)</li>
+                    <li><strong>No retry for:</strong> Client errors (4xx), validation errors</li>
+                    <li><strong>User feedback:</strong> Retry progress indicator</li>
+                </ul>
+            </div>
+            
+            <div id="retry-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Enhanced Error Handling Test</h3>
+            <p>Test improved error messages and handling:</p>
+            
+            <button class="test-btn" onclick="testTimeoutError()">⏱️ Test Timeout</button>
+            <button class="test-btn" onclick="testRateLimitError()">🚦 Test Rate Limit</button>
+            <button class="test-btn" onclick="testValidationError()">✅ Test Validation Error</button>
+            
+            <div id="error-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Widget Identifier Test</h3>
+            <p>Test widget metadata and identification:</p>
+            
+            <button class="test-btn primary" onclick="testWidgetIdentifier()">🏷️ Test Widget Identifier</button>
+            
+            <div class="status info">
+                <strong>Widget Metadata Included:</strong><br>
+                • <code>widget_version</code>: Version identifier<br>
+                • <code>website_url</code>: Auto-detected origin<br>
+                • <code>company</code>: Auto-detected domain<br>
+                • <code>user_agent</code>: Browser information<br>
+                • <code>timestamp</code>: Submission time<br>
+                • <code>X-Widget-Version</code>: Header version<br>
+                • <code>X-Widget-Origin</code>: Header origin
+            </div>
+            
+            <div id="identifier-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Real Submission Test</h3>
+            <p>Test actual submission to your backend:</p>
+            
+            <button class="test-btn primary" onclick="testRealSubmission()">📤 Test Real Submission</button>
+            
+            <div class="feature-list">
+                <h4>✅ Complete AJAX Features:</h4>
+                <ul>
+                    <li>Backend endpoint integration</li>
+                    <li>CORS handling with proper headers</li>
+                    <li>Retry logic with progressive delays</li>
+                    <li>Widget identifier and metadata</li>
+                    <li>Enhanced error handling</li>
+                    <li>User feedback and progress indicators</li>
+                    <li>Timeout handling (30 seconds)</li>
+                    <li>Security headers and credential management</li>
+                </ul>
+            </div>
+            
+            <div id="real-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Log</h3>
+            <button class="test-btn" onclick="clearLog()">🗑️ Clear Log</button>
+            <div id="test-log" class="test-log"></div>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'AJAX Test',
+            placeholder: 'Test AJAX enhancements...',
+            showName: true,
+            showEmail: true
+        });
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('test-log');
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[AJAX-TEST] ${message}`);
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function clearLog() {
+            document.getElementById('test-log').textContent = '';
+        }
+
+        function fillAndSubmitForm(comment = 'Test AJAX enhancements', name = 'Test User', email = 'test@example.com') {
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                const commentField = document.getElementById('feedback-widget-comment');
+                const nameField = document.getElementById('feedback-widget-name');
+                const emailField = document.getElementById('feedback-widget-email');
+                
+                if (commentField) commentField.value = comment;
+                if (nameField) nameField.value = name;
+                if (emailField) emailField.value = email;
+                
+                // Submit the form
+                const form = document.getElementById('feedback-widget-form');
+                if (form) {
+                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    form.dispatchEvent(submitEvent);
+                }
+            }, 500);
+        }
+
+        function testCORSHeaders() {
+            log('Testing CORS headers and cross-origin handling...');
+            showResult('cors-result', 'CORS test initiated. Check network tab for request headers and CORS handling.', 'info');
+            fillAndSubmitForm('Testing CORS headers and cross-origin request handling');
+        }
+
+        function inspectRequestHeaders() {
+            log('Request headers inspection - check browser network tab');
+            showResult('cors-result', 
+                'Open browser dev tools (F12) → Network tab → Submit a form → Click on the request to see headers:<br>' +
+                '• <strong>Request Headers:</strong> Content-Type, X-Requested-With, X-Widget-Version, X-Widget-Origin<br>' +
+                '• <strong>Request Options:</strong> mode: cors, credentials: omit, cache: no-cache',
+                'info'
+            );
+        }
+
+        function testRetryLogic() {
+            log('Testing retry logic - this will attempt to submit to an invalid endpoint');
+            
+            // Temporarily change API URL to trigger retry logic
+            const originalApiUrl = FeedbackWidget.config?.apiUrl;
+            
+            // Override the widget's API URL to trigger network errors
+            if (window.FeedbackWidget && window.FeedbackWidget.config) {
+                window.FeedbackWidget.config.apiUrl = 'https://invalid-endpoint-for-testing.com/submit';
+            }
+            
+            showResult('retry-result', 
+                'Retry test initiated with invalid endpoint. Watch for retry attempts with progressive delays (1s, 2s, 4s).',
+                'warning'
+            );
+            
+            fillAndSubmitForm('Testing retry logic with network failure');
+            
+            // Restore original URL after test
+            setTimeout(() => {
+                if (window.FeedbackWidget && window.FeedbackWidget.config && originalApiUrl) {
+                    window.FeedbackWidget.config.apiUrl = originalApiUrl;
+                }
+            }, 15000);
+        }
+
+        function testNetworkError() {
+            log('Simulating network error...');
+            showResult('retry-result', 'Network error simulation - disconnect your internet or use dev tools to simulate offline mode.', 'info');
+            fillAndSubmitForm('Testing network error handling');
+        }
+
+        function testServerError() {
+            log('Server error test - depends on backend response');
+            showResult('retry-result', 'Server error test - this depends on your backend returning 5xx status codes.', 'info');
+            fillAndSubmitForm('Testing server error handling');
+        }
+
+        function testTimeoutError() {
+            log('Timeout error test - 30 second timeout');
+            showResult('error-result', 'Timeout test - requests timeout after 30 seconds. Use dev tools to throttle network to test.', 'info');
+            fillAndSubmitForm('Testing timeout error handling');
+        }
+
+        function testRateLimitError() {
+            log('Rate limit test - submit multiple times quickly');
+            showResult('error-result', 'Rate limit test - try submitting multiple forms within 2 seconds.', 'info');
+            
+            // Submit multiple times to trigger rate limiting
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    fillAndSubmitForm(`Rate limit test submission ${i + 1}`);
+                }, i * 100);
+            }
+        }
+
+        function testValidationError() {
+            log('Validation error test - empty comment');
+            showResult('error-result', 'Validation error test - submitting empty comment (should not retry).', 'info');
+            fillAndSubmitForm('', 'Test User', 'test@example.com');
+        }
+
+        function testWidgetIdentifier() {
+            log('Testing widget identifier and metadata...');
+            showResult('identifier-result', 
+                'Widget identifier test initiated. Check network request payload for metadata:<br>' +
+                '• widget_version, website_url, company, user_agent, timestamp<br>' +
+                '• Request headers: X-Widget-Version, X-Widget-Origin',
+                'info'
+            );
+            fillAndSubmitForm('Testing widget identifier and metadata collection');
+        }
+
+        function testRealSubmission() {
+            log('Testing real submission to backend...');
+            showResult('real-result', 'Real submission test - this will actually submit to your backend endpoint.', 'info');
+            fillAndSubmitForm('Real submission test with all AJAX enhancements enabled');
+        }
+
+        // Event listeners for widget events
+        window.addEventListener('feedbackWidget:submitted', function(e) {
+            log(`✅ Submission successful after ${e.detail.attempt || 1} attempt(s)`);
+            showResult('real-result', 
+                `Form submitted successfully!<br>` +
+                `Attempts: ${e.detail.attempt || 1}<br>` +
+                `Data: ${JSON.stringify(e.detail.data)}`,
+                'success'
+            );
+        });
+
+        window.addEventListener('feedbackWidget:submitError', function(e) {
+            log(`❌ Submission failed: ${e.detail.error} (${e.detail.attempts || 1} attempts)`);
+            
+            if (e.detail.finalError) {
+                showResult('retry-result', 
+                    `All retry attempts exhausted!<br>` +
+                    `Total attempts: ${e.detail.attempts}<br>` +
+                    `Final error: ${e.detail.error}`,
+                    'error'
+                );
+            } else {
+                showResult('error-result', 
+                    `Submission error: ${e.detail.error}<br>` +
+                    `Attempts: ${e.detail.attempts || 1}`,
+                    'error'
+                );
+            }
+        });
+
+        // Initial log
+        log('AJAX enhancements test page loaded');
+        log('Widget initialized with enhanced AJAX submission capabilities');
+    </script>
+</body>
+</html>

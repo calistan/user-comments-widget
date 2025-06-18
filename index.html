@@ -150,6 +150,7 @@
                 <button class="demo-btn" onclick="openResponsiveTest()">📱 Responsive Test</button>
                 <button class="demo-btn" onclick="openFormSubmissionTest()">📝 Form Test</button>
                 <button class="demo-btn" onclick="openValidationTest()">🔒 Validation Test</button>
+                <button class="demo-btn" onclick="openAjaxTest()">🚀 AJAX Test</button>
             </div>
         </div>
         
@@ -242,7 +243,9 @@
                 <li>✅ <strong>Comprehensive form validation (required fields, email format, length limits, spam detection)</strong></li>
                 <li>✅ <strong>Honeypot field for advanced spam bot prevention</strong></li>
                 <li>✅ <strong>Real-time validation feedback (blur/input events)</strong></li>
-                <li>✅ <strong>AJAX submission to backend with timeout and error handling</strong></li>
+                <li>✅ <strong>Enhanced AJAX submission with CORS handling and retry logic</strong></li>
+                <li>✅ <strong>Progressive retry system (3 attempts with 1s, 2s, 4s delays)</strong></li>
+                <li>✅ <strong>Widget identifier and metadata tracking</strong></li>
                 <li>✅ <strong>Auto-detection of website URL and domain</strong></li>
                 <li>✅ <strong>Client-side rate limiting (2s cooldown, 5/hour limit)</strong></li>
                 <li>✅ <strong>Automatic form reset after successful submission</strong></li>
@@ -415,6 +418,10 @@
 
         function openValidationTest() {
             window.open('test-validation-enhancements.html', '_blank');
+        }
+
+        function openAjaxTest() {
+            window.open('test-ajax-enhancements.html', '_blank');
         }
 
         function updateCodeExample() {
