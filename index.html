@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feedback Widget Demo</title>
+    <title>Feedback Widget - Live Demo & Integration Guide</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -198,7 +198,7 @@
             
             <div class="code-block">
 &lt;!-- Add this before closing &lt;/body&gt; tag --&gt;<br>
-&lt;script src="<span class="highlight">path/to/widget.js</span>"&gt;&lt;/script&gt;<br>
+&lt;script src="<span class="highlight">https://your-project-name.vercel.app/widget.js</span>"&gt;&lt;/script&gt;<br>
 &lt;script&gt;<br>
 &nbsp;&nbsp;FeedbackWidget.init({<br>
 &nbsp;&nbsp;&nbsp;&nbsp;position: '<span id="code-position">bottom-right</span>',<br>
@@ -248,6 +248,14 @@
         </div>
 
         <div class="demo-section">
+            <h2>Environment Info</h2>
+            <p>Current environment and API configuration:</p>
+            <div id="environment-info" style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-bottom: 16px;">
+                <div style="color: #6b7280;">Environment info will appear here...</div>
+            </div>
+        </div>
+
+        <div class="demo-section">
             <h2>Event Monitoring</h2>
             <p>The widget dispatches custom events that you can listen to:</p>
             <div id="event-log" style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; max-height: 150px; overflow-y: auto;">
@@ -268,7 +276,39 @@
             showName: true,
             showEmail: true
         });
-        
+
+        // Display environment information
+        function displayEnvironmentInfo() {
+            const hostname = window.location.hostname;
+            const isLocal = hostname === 'localhost' ||
+                           hostname === '127.0.0.1' ||
+                           hostname === '' ||
+                           window.location.protocol === 'file:';
+
+            const apiUrl = isLocal ?
+                'http://localhost:5000/submit_comment' :
+                'https://user-comments.onrender.com/submit_comment';
+
+            const envInfo = document.getElementById('environment-info');
+            envInfo.innerHTML = `
+                <div style="color: ${isLocal ? '#059669' : '#dc2626'}; font-weight: bold;">
+                    🌍 Environment: ${isLocal ? 'LOCAL DEVELOPMENT' : 'PRODUCTION'}
+                </div>
+                <div style="color: #374151; margin-top: 4px;">
+                    📍 Hostname: ${hostname || 'file://'}
+                </div>
+                <div style="color: #374151; margin-top: 4px;">
+                    🔗 API URL: ${apiUrl}
+                </div>
+                <div style="color: #374151; margin-top: 4px;">
+                    🌐 Origin: ${window.location.origin || 'file://'}
+                </div>
+            `;
+        }
+
+        // Call it after widget initialization
+        displayEnvironmentInfo();
+
         // Demo functions
         function updateWidget() {
             const position = document.getElementById('position').value;
@@ -277,19 +317,19 @@
             const placeholder = document.getElementById('placeholder').value;
             const showName = document.getElementById('showName').checked;
             const showEmail = document.getElementById('showEmail').checked;
-            
+
             // Remove existing widget
             const existingContainer = document.getElementById('feedback-widget-container');
             if (existingContainer) {
                 existingContainer.remove();
             }
-            
+
             // Remove existing styles
             const existingStyles = document.getElementById('feedback-widget-styles');
             if (existingStyles) {
                 existingStyles.remove();
             }
-            
+
             // Reinitialize with new config
             FeedbackWidget.init({
                 position,
@@ -299,15 +339,15 @@
                 showName,
                 showEmail
             });
-            
+
             // Update code example
             updateCodeExample();
         }
-        
+
         function reinitializeWidget() {
             updateWidget();
         }
-        
+
         function updateCodeExample() {
             document.getElementById('code-position').textContent = document.getElementById('position').value;
             document.getElementById('code-color').textContent = document.getElementById('primaryColor').value;
@@ -316,7 +356,7 @@
             document.getElementById('code-name').textContent = document.getElementById('showName').checked;
             document.getElementById('code-email').textContent = document.getElementById('showEmail').checked;
         }
-        
+
         // Initialize code example
         updateCodeExample();
 

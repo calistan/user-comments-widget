@@ -1,0 +1,32 @@
+{
+  "name": "user-comments-widget",
+  "version": "1.0.0",
+  "description": "Embeddable feedback widget for collecting user comments on any website",
+  "main": "widget.js",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "start": "python -m http.server 8000",
+    "deploy": "vercel --prod",
+    "deploy-preview": "vercel"
+  },
+  "keywords": [
+    "widget",
+    "feedback",
+    "comments",
+    "embeddable",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/user-comments-widget.git"
+  },
+  "homepage": "https://your-widget-url.vercel.app",
+  "files": [
+    "widget.js",
+    "index.html",
+    "vercel.json",
+    "README.md"
+  ]
+}

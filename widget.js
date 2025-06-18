@@ -12,6 +12,22 @@
     // Namespace to avoid conflicts
     window.FeedbackWidget = window.FeedbackWidget || {};
     
+    // Auto-detect environment and set appropriate API URL
+    function getDefaultApiUrl() {
+        const hostname = window.location.hostname;
+
+        // If running locally (localhost, 127.0.0.1, or file://)
+        if (hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            hostname === '' ||
+            window.location.protocol === 'file:') {
+            return 'http://localhost:5000/submit_comment';
+        }
+
+        // If running in production (any other domain)
+        return 'https://user-comments.onrender.com/submit_comment';
+    }
+
     // Default configuration
     const DEFAULT_CONFIG = {
         position: 'bottom-right',
@@ -21,7 +37,7 @@
         title: 'Feedback',
         showEmail: true,
         showName: true,
-        apiUrl: 'http://localhost:5000/submit_comment'
+        apiUrl: getDefaultApiUrl()
     };
     
     // Widget state
@@ -37,11 +53,17 @@
      */
     function init(options = {}) {
         config = { ...DEFAULT_CONFIG, ...options };
-        
+
         // Auto-detect website domain
         config.websiteUrl = window.location.origin;
         config.websiteDomain = window.location.hostname;
-        
+
+        // Log environment info for debugging
+        const isLocal = config.apiUrl.includes('localhost');
+        console.log(`[FeedbackWidget] Initializing in ${isLocal ? 'LOCAL' : 'PRODUCTION'} mode`);
+        console.log(`[FeedbackWidget] API URL: ${config.apiUrl}`);
+        console.log(`[FeedbackWidget] Website: ${config.websiteUrl}`);
+
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', createWidget);

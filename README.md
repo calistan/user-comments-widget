@@ -18,7 +18,7 @@ An embeddable feedback collection widget that can be easily integrated into any 
 
 ```html
 <!-- Add before closing </body> tag -->
-<script src="path/to/widget.js"></script>
+<script src="https://your-widget-url.vercel.app/widget.js"></script>
 <script>
   FeedbackWidget.init();
 </script>
@@ -49,7 +49,7 @@ An embeddable feedback collection widget that can be easily integrated into any 
 | `placeholder` | string | `'Share your feedback...'` | Placeholder text for comment field |
 | `showName` | boolean | `true` | Show/hide the name field |
 | `showEmail` | boolean | `true` | Show/hide the email field |
-| `apiUrl` | string | `'https://user-comments-backend.onrender.com/submit_comment'` | Backend API endpoint |
+| `apiUrl` | string | `'https://user-comments.onrender.com/submit_comment'` | Backend API endpoint |
 
 ## API Methods
 
@@ -119,9 +119,104 @@ The widget includes comprehensive CSS that:
 - Edge 79+
 - Mobile browsers (iOS Safari, Chrome Mobile)
 
-## Demo
+## Deployment to Vercel
 
-Open `demo.html` in your browser to see the widget in action and test different configurations.
+### Step 1: Prepare for Deployment
+
+1. Make sure your widget files are ready:
+   - `widget.js` (main widget file)
+   - `demo.html` (demo page)
+   - `vercel.json` (deployment configuration)
+
+### Step 2: Deploy to Vercel
+
+#### Option A: Using Vercel CLI
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy from widget directory
+cd widget
+vercel
+
+# Follow the prompts:
+# - Set up and deploy? Y
+# - Which scope? (select your account)
+# - Link to existing project? N
+# - Project name: user-comments-widget (or your preferred name)
+# - Directory: ./
+# - Override settings? N
+```
+
+#### Option B: Using Vercel Dashboard
+1. Go to [vercel.com](https://vercel.com)
+2. Click "New Project"
+3. Import your Git repository
+4. Set the root directory to `widget/`
+5. Click "Deploy"
+
+### Step 3: Update Integration Code
+
+Once deployed, your widget will be available at:
+```
+https://your-project-name.vercel.app/widget.js
+```
+
+Update your integration code:
+```html
+<script src="https://your-project-name.vercel.app/widget.js"></script>
+<script>
+  FeedbackWidget.init();
+</script>
+```
+
+## Local Development
+
+### Environment Auto-Detection
+
+The widget automatically detects whether it's running locally or in production:
+
+- **Local Development**: Uses `http://localhost:5000/submit_comment`
+- **Production**: Uses `https://user-comments.onrender.com/submit_comment`
+
+### Running Locally
+
+1. **Start the Backend Server** (in a separate terminal):
+   ```bash
+   cd backend
+   # Activate virtual environment if needed
+   .\.venv\Scripts\activate  # Windows
+   # source .venv/bin/activate  # macOS/Linux
+
+   # Install dependencies
+   pip install -r requirements.txt
+
+   # Start the server
+   python app.py
+   ```
+
+2. **Start the Widget Demo**:
+   ```bash
+   cd widget
+
+   # Option 1: Use the development script
+   ./dev.sh        # macOS/Linux
+   dev.bat         # Windows
+
+   # Option 2: Use npm script
+   npm run dev
+
+   # Option 3: Manual server
+   python -m http.server 8000
+
+   # Then visit http://localhost:8000 or http://localhost:8000/index.html
+   ```
+
+3. **Check Environment**: The demo page will show whether you're in LOCAL or PRODUCTION mode
+
+### Demo
+
+Open `index.html` in your browser to see the widget in action and test different configurations. When deployed to Vercel, this will be the main page visitors see.
 
 ## Integration Examples
 
