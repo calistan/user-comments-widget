@@ -125,8 +125,7 @@ The widget includes comprehensive CSS that:
 
 1. Make sure your widget files are ready:
    - `widget.js` (main widget file)
-   - `demo.html` (demo page)
-   - `vercel.json` (deployment configuration)
+   - `index.html` (demo page and entry point)
 
 ### Step 2: Deploy to Vercel
 

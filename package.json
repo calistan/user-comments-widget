@@ -26,7 +26,6 @@
   "files": [
     "widget.js",
     "index.html",
-    "vercel.json",
     "README.md"
   ]
 }
