@@ -21,7 +21,7 @@
         title: 'Feedback',
         showEmail: true,
         showName: true,
-        apiUrl: 'https://user-comments-backend.onrender.com/submit_comment'
+        apiUrl: 'http://localhost:5000/submit_comment'
     };
     
     // Widget state
@@ -352,7 +352,7 @@
      */
     function handleFormSubmit(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(e.target);
         const data = {
             comment: formData.get('comment'),
@@ -361,18 +361,37 @@
             company: config.websiteDomain, // Auto-detected from website
             website_url: config.websiteUrl
         };
-        
+
         // Show loading state
         showLoading(true);
-        
-        // Submit to backend (placeholder for now)
+
+        // Submit to backend
         console.log('Submitting feedback:', data);
-        
-        // Simulate API call for now
-        setTimeout(() => {
+
+        // Make actual API call
+        fetch(config.apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
             showLoading(false);
             showSuccess();
-        }, 1500);
+            console.log('Feedback submitted successfully:', result);
+        })
+        .catch(error => {
+            showLoading(false);
+            showError('Failed to submit feedback. Please try again.');
+            console.error('Error submitting feedback:', error);
+        });
     }
     
     /**
@@ -436,12 +455,16 @@
         const success = document.getElementById('feedback-widget-success');
         const error = document.getElementById('feedback-widget-error');
 
-        form.style.display = 'block';
-        success.style.display = 'none';
-        error.style.display = 'none';
+        // Ensure only form is visible
+        if (form) form.style.display = 'block';
+        if (success) success.style.display = 'none';
+        if (error) error.style.display = 'none';
 
-        form.reset();
-        showLoading(false);
+        // Reset form data
+        if (form) {
+            form.reset();
+            showLoading(false);
+        }
     }
 
     /**
