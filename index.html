@@ -148,6 +148,7 @@
                 <button class="demo-btn" onclick="reinitializeWidget()">Reinitialize</button>
                 <button class="demo-btn" onclick="checkWidgetState()">Check State</button>
                 <button class="demo-btn" onclick="openResponsiveTest()">📱 Responsive Test</button>
+                <button class="demo-btn" onclick="openFormSubmissionTest()">📝 Form Test</button>
             </div>
         </div>
         
@@ -237,7 +238,12 @@
                 <li>✅ <strong>High contrast and reduced motion accessibility support</strong></li>
                 <li>✅ <strong>ARIA attributes for screen readers</strong></li>
                 <li>✅ <strong>Focus management and restoration</strong></li>
-                <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed, feedbackWidget:themeChanged)</strong></li>
+                <li>✅ <strong>Comprehensive form validation (required fields, email format, spam detection)</strong></li>
+                <li>✅ <strong>AJAX submission to backend with timeout and error handling</strong></li>
+                <li>✅ <strong>Auto-detection of website URL and domain</strong></li>
+                <li>✅ <strong>Client-side rate limiting (2s cooldown, 5/hour limit)</strong></li>
+                <li>✅ <strong>Automatic form reset after successful submission</strong></li>
+                <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed, feedbackWidget:themeChanged, feedbackWidget:submitted, feedbackWidget:submitError)</strong></li>
                 <li>✅ Loading states and success/error messages</li>
                 <li>✅ CSS reset to prevent host site style conflicts</li>
                 <li>✅ Customizable colors, position, and text</li>
@@ -258,6 +264,23 @@
             </ul>
             <div style="margin-top: 16px;">
                 <button class="demo-btn primary" onclick="openResponsiveTest()">📱 Open Responsive Test Page</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Form Submission Features</h2>
+            <ul style="color: #374151; line-height: 1.8;">
+                <li>✅ <strong>Comprehensive Validation:</strong> Required fields, email format, length limits, spam detection</li>
+                <li>🚀 <strong>AJAX Submission:</strong> Asynchronous submission with 30-second timeout</li>
+                <li>🌐 <strong>Auto-Detection:</strong> Automatically captures website URL and domain</li>
+                <li>⏱️ <strong>Rate Limiting:</strong> 2-second cooldown, maximum 5 submissions per hour</li>
+                <li>🔄 <strong>Smart Reset:</strong> Form clears after successful submission</li>
+                <li>🛡️ <strong>Error Handling:</strong> Network errors, timeouts, server errors</li>
+                <li>📊 <strong>Event System:</strong> Custom events for submission success/failure</li>
+                <li>🎯 <strong>Field Validation:</strong> Real-time validation with inline error messages</li>
+            </ul>
+            <div style="margin-top: 16px;">
+                <button class="demo-btn primary" onclick="openFormSubmissionTest()">📝 Open Form Submission Test Page</button>
             </div>
         </div>
 
@@ -381,6 +404,10 @@
 
         function openResponsiveTest() {
             window.open('test-responsive.html', '_blank');
+        }
+
+        function openFormSubmissionTest() {
+            window.open('test-form-submission.html', '_blank');
         }
 
         function updateCodeExample() {

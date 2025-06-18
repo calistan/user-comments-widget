@@ -46,6 +46,11 @@
     let widgetContainer = null;
     let feedbackButton = null;
     let feedbackPanel = null;
+
+    // Rate limiting state
+    let lastSubmissionTime = 0;
+    let submissionCount = 0;
+    let isSubmitting = false;
     
     /**
      * Initialize the feedback widget
@@ -414,49 +419,284 @@
     }
     
     /**
-     * Handle form submission
+     * Validate email format
+     */
+    function validateEmail(email) {
+        if (!email) return true; // Email is optional
+
+        // RFC 5322 compliant email regex (simplified but robust)
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        return emailRegex.test(email.trim());
+    }
+
+    /**
+     * Validate comment content
+     */
+    function validateComment(comment) {
+        if (!comment || !comment.trim()) {
+            return { valid: false, message: 'Comment is required.' };
+        }
+
+        const trimmed = comment.trim();
+
+        if (trimmed.length < 3) {
+            return { valid: false, message: 'Comment must be at least 3 characters long.' };
+        }
+
+        if (trimmed.length > 2000) {
+            return { valid: false, message: 'Comment must be less than 2000 characters.' };
+        }
+
+        // Check for spam patterns
+        const spamPatterns = [
+            /(.)\1{10,}/, // Repeated characters
+            /^[A-Z\s!]{20,}$/, // All caps
+            /(https?:\/\/[^\s]+.*){3,}/, // Multiple URLs
+        ];
+
+        for (const pattern of spamPatterns) {
+            if (pattern.test(trimmed)) {
+                return { valid: false, message: 'Comment appears to be spam. Please provide genuine feedback.' };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Validate name field
+     */
+    function validateName(name) {
+        if (!name) return { valid: true }; // Name is optional
+
+        const trimmed = name.trim();
+
+        if (trimmed.length > 100) {
+            return { valid: false, message: 'Name must be less than 100 characters.' };
+        }
+
+        // Basic name validation (letters, spaces, hyphens, apostrophes)
+        const nameRegex = /^[a-zA-Z\s\-'\.]+$/;
+        if (!nameRegex.test(trimmed)) {
+            return { valid: false, message: 'Name contains invalid characters.' };
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Check rate limiting
+     */
+    function checkRateLimit() {
+        const now = Date.now();
+        const timeSinceLastSubmission = now - lastSubmissionTime;
+
+        // Prevent double submissions (within 2 seconds)
+        if (timeSinceLastSubmission < 2000) {
+            return { allowed: false, message: 'Please wait before submitting again.' };
+        }
+
+        // Reset submission count every hour
+        if (timeSinceLastSubmission > 3600000) { // 1 hour
+            submissionCount = 0;
+        }
+
+        // Limit to 5 submissions per hour
+        if (submissionCount >= 5) {
+            return { allowed: false, message: 'Too many submissions. Please try again later.' };
+        }
+
+        return { allowed: true };
+    }
+
+    /**
+     * Show field validation error
+     */
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.feedback-widget-field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Add error styling
+        field.classList.add('feedback-widget-field-invalid');
+
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'feedback-widget-field-error';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+
+        // Focus the field
+        field.focus();
+    }
+
+    /**
+     * Clear field validation errors
+     */
+    function clearFieldErrors() {
+        const fields = ['feedback-widget-comment', 'feedback-widget-name', 'feedback-widget-email'];
+
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.remove('feedback-widget-field-invalid');
+                const error = field.parentNode.querySelector('.feedback-widget-field-error');
+                if (error) {
+                    error.remove();
+                }
+            }
+        });
+    }
+
+    /**
+     * Handle form submission with comprehensive validation
      */
     function handleFormSubmit(e) {
         e.preventDefault();
 
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log('[FeedbackWidget] Submission already in progress');
+            return;
+        }
+
+        // Clear previous errors
+        clearFieldErrors();
+
+        // Get form data
         const formData = new FormData(e.target);
+        const comment = formData.get('comment') || '';
+        const name = formData.get('name') || '';
+        const email = formData.get('email') || '';
+
+        // Validate comment (required)
+        const commentValidation = validateComment(comment);
+        if (!commentValidation.valid) {
+            showFieldError('feedback-widget-comment', commentValidation.message);
+            return;
+        }
+
+        // Validate name (optional)
+        const nameValidation = validateName(name);
+        if (!nameValidation.valid) {
+            showFieldError('feedback-widget-name', nameValidation.message);
+            return;
+        }
+
+        // Validate email (optional)
+        if (!validateEmail(email)) {
+            showFieldError('feedback-widget-email', 'Please enter a valid email address.');
+            return;
+        }
+
+        // Check rate limiting
+        const rateLimitCheck = checkRateLimit();
+        if (!rateLimitCheck.allowed) {
+            showError(rateLimitCheck.message);
+            return;
+        }
+
+        // Prepare submission data with auto-detected info
         const data = {
-            comment: formData.get('comment'),
-            name: formData.get('name') || '',
-            email: formData.get('email') || '',
+            comment: comment.trim(),
+            name: name.trim(),
+            email: email.trim(),
             company: config.websiteDomain, // Auto-detected from website
-            website_url: config.websiteUrl
+            website_url: config.websiteUrl,
+            user_agent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            widget_version: '1.0.0'
         };
+
+        // Set submission state
+        isSubmitting = true;
+        lastSubmissionTime = Date.now();
+        submissionCount++;
 
         // Show loading state
         showLoading(true);
 
-        // Submit to backend
-        console.log('Submitting feedback:', data);
+        console.log('[FeedbackWidget] Submitting feedback:', {
+            ...data,
+            user_agent: '[REDACTED]' // Don't log full user agent
+        });
 
-        // Make actual API call
+        // Submit to backend with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
         fetch(config.apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            signal: controller.signal
         })
         .then(response => {
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+
             return response.json();
         })
         .then(result => {
+            isSubmitting = false;
             showLoading(false);
+
+            // Reset form and show success
+            resetFormData();
             showSuccess();
-            console.log('Feedback submitted successfully:', result);
+
+            console.log('[FeedbackWidget] Feedback submitted successfully:', result);
+
+            // Dispatch success event
+            dispatchWidgetEvent('submitted', {
+                success: true,
+                data: {
+                    comment: data.comment,
+                    name: data.name,
+                    email: data.email ? '[PROVIDED]' : '[NOT PROVIDED]'
+                }
+            });
         })
         .catch(error => {
+            clearTimeout(timeoutId);
+            isSubmitting = false;
             showLoading(false);
-            showError('Failed to submit feedback. Please try again.');
-            console.error('Error submitting feedback:', error);
+
+            let errorMessage = 'Failed to submit feedback. Please try again.';
+
+            if (error.name === 'AbortError') {
+                errorMessage = 'Request timed out. Please check your connection and try again.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (error.message.includes('HTTP 429')) {
+                errorMessage = 'Too many requests. Please wait a moment and try again.';
+            } else if (error.message.includes('HTTP 5')) {
+                errorMessage = 'Server error. Please try again later.';
+            }
+
+            showError(errorMessage);
+            console.error('[FeedbackWidget] Error submitting feedback:', error);
+
+            // Dispatch error event
+            dispatchWidgetEvent('submitError', {
+                error: error.message,
+                data: {
+                    comment: data.comment,
+                    name: data.name,
+                    email: data.email ? '[PROVIDED]' : '[NOT PROVIDED]'
+                }
+            });
         });
     }
     
@@ -503,9 +743,13 @@
 
         console.log('[FeedbackWidget] Success message shown');
 
-        // Auto close after 3 seconds
+        // Auto close after 3 seconds and reset form
         setTimeout(() => {
             closePanel();
+            // Reset form after closing for next use
+            setTimeout(() => {
+                resetForm();
+            }, 500);
         }, 3000);
     }
     
@@ -542,7 +786,24 @@
     }
     
     /**
-     * Reset form and messages
+     * Reset form data only (keep form visible)
+     */
+    function resetFormData() {
+        const form = document.getElementById('feedback-widget-form');
+
+        if (form) {
+            form.reset();
+            showLoading(false);
+        }
+
+        // Clear any field errors
+        clearFieldErrors();
+
+        console.log('[FeedbackWidget] Form data reset');
+    }
+
+    /**
+     * Reset form and messages (full reset)
      */
     function resetForm() {
         const form = document.getElementById('feedback-widget-form');
@@ -563,11 +824,10 @@
             error.style.visibility = 'hidden';
         }
 
-        // Reset form data
-        if (form) {
-            form.reset();
-            showLoading(false);
-        }
+        // Reset form data and clear errors
+        resetFormData();
+
+        console.log('[FeedbackWidget] Full form reset');
     }
 
     /**
@@ -1126,6 +1386,27 @@
                 min-height: 80px !important;
                 max-height: 120px !important;
                 font-family: inherit !important;
+            }
+
+            /* ===== FORM VALIDATION STYLES ===== */
+            .feedback-widget-field-invalid {
+                border-color: #ef4444 !important;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+            }
+
+            .feedback-widget-field-error {
+                color: #ef4444 !important;
+                font-size: 12px !important;
+                margin-top: 4px !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+                line-height: 1.3 !important;
+            }
+
+            .feedback-widget-field-error::before {
+                content: "⚠" !important;
+                font-size: 10px !important;
             }
 
             /* ===== MOBILE-FIRST ACTIONS ===== */
