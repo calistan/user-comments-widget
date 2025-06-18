@@ -243,11 +243,7 @@
         feedbackButton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (isOpen) {
-                closePanel();
-            } else {
-                openPanel();
-            }
+            togglePanel();
         });
 
         // Close button
@@ -294,8 +290,27 @@
 
         // Handle focus trapping when panel is open
         document.addEventListener('keydown', handleFocusTrapping);
+
+        // Handle keyboard navigation for button
+        feedbackButton.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                togglePanel();
+            }
+        });
     }
     
+    /**
+     * Toggle the feedback panel open/closed
+     */
+    function togglePanel() {
+        if (isOpen) {
+            closePanel();
+        } else {
+            openPanel();
+        }
+    }
+
     /**
      * Open the feedback panel
      */
@@ -311,9 +326,15 @@
         feedbackPanel.setAttribute('aria-hidden', 'false');
         feedbackButton.setAttribute('aria-expanded', 'true');
 
-        // Add classes for animation
-        feedbackPanel.classList.add('feedback-widget-panel-open');
+        // Add classes for animation with enhanced smooth transitions
+        feedbackPanel.classList.add('feedback-widget-panel-opening');
         feedbackButton.classList.add('feedback-widget-button-hidden');
+
+        // Use requestAnimationFrame for smoother animations
+        requestAnimationFrame(() => {
+            feedbackPanel.classList.add('feedback-widget-panel-open');
+            feedbackPanel.classList.remove('feedback-widget-panel-opening');
+        });
 
         // Store the previously focused element
         window.feedbackWidgetPreviousFocus = document.activeElement;
@@ -338,19 +359,28 @@
 
         isOpen = false;
 
-        // Restore body scroll
-        preventBodyScroll(false);
-
         // Update ARIA attributes
         feedbackPanel.setAttribute('aria-hidden', 'true');
         feedbackButton.setAttribute('aria-expanded', 'false');
 
-        // Remove classes for animation
+        // Add closing animation class for smooth transition
+        feedbackPanel.classList.add('feedback-widget-panel-closing');
         feedbackPanel.classList.remove('feedback-widget-panel-open');
-        feedbackButton.classList.remove('feedback-widget-button-hidden');
 
-        // Restore focus to previously focused element or feedback button
+        // Use requestAnimationFrame for smoother animations
+        requestAnimationFrame(() => {
+            feedbackButton.classList.remove('feedback-widget-button-hidden');
+        });
+
+        // Wait for animation to complete before restoring scroll and focus
         setTimeout(() => {
+            // Restore body scroll
+            preventBodyScroll(false);
+
+            // Remove closing class
+            feedbackPanel.classList.remove('feedback-widget-panel-closing');
+
+            // Restore focus to previously focused element or feedback button
             if (window.feedbackWidgetPreviousFocus &&
                 document.contains(window.feedbackWidgetPreviousFocus)) {
                 window.feedbackWidgetPreviousFocus.focus();
@@ -358,12 +388,10 @@
                 feedbackButton.focus();
             }
             window.feedbackWidgetPreviousFocus = null;
-        }, 100);
 
-        // Reset form and messages after animation
-        setTimeout(() => {
+            // Reset form and messages after animation
             resetForm();
-        }, 300);
+        }, 350); // Match animation duration
 
         // Dispatch custom event
         dispatchWidgetEvent('closed');
@@ -524,21 +552,28 @@
         if (!isOpen || e.key !== 'Tab') return;
 
         const focusableElements = feedbackPanel.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
 
-        const firstFocusable = focusableElements[0];
-        const lastFocusable = focusableElements[focusableElements.length - 1];
+        const focusableArray = Array.from(focusableElements);
+        const firstFocusable = focusableArray[0];
+        const lastFocusable = focusableArray[focusableArray.length - 1];
+
+        // If no focusable elements, prevent tabbing
+        if (focusableArray.length === 0) {
+            e.preventDefault();
+            return;
+        }
 
         if (e.shiftKey) {
-            // Shift + Tab
-            if (document.activeElement === firstFocusable) {
+            // Shift + Tab - moving backwards
+            if (document.activeElement === firstFocusable || !feedbackPanel.contains(document.activeElement)) {
                 e.preventDefault();
                 lastFocusable.focus();
             }
         } else {
-            // Tab
-            if (document.activeElement === lastFocusable) {
+            // Tab - moving forwards
+            if (document.activeElement === lastFocusable || !feedbackPanel.contains(document.activeElement)) {
                 e.preventDefault();
                 firstFocusable.focus();
             }
@@ -625,6 +660,7 @@
                 opacity: 0;
                 transform: scale(0.8) translateY(-2px);
                 pointer-events: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .feedback-widget-button-content {
@@ -674,12 +710,26 @@
                 transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
                 pointer-events: none;
                 will-change: transform, opacity;
+                visibility: hidden;
+            }
+
+            .feedback-widget-panel-opening {
+                visibility: visible;
+                pointer-events: auto;
             }
 
             .feedback-widget-panel-open {
                 transform: scale(1) translateY(0);
                 opacity: 1;
                 pointer-events: auto;
+                visibility: visible;
+            }
+
+            .feedback-widget-panel-closing {
+                transform: scale(0.8) translateY(20px);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .feedback-widget-panel:focus-within {
@@ -964,5 +1014,7 @@
     window.FeedbackWidget.init = init;
     window.FeedbackWidget.open = openPanel;
     window.FeedbackWidget.close = closePanel;
+    window.FeedbackWidget.toggle = togglePanel;
+    window.FeedbackWidget.isOpen = () => isOpen;
     
 })();

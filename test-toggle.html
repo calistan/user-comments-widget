@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toggle Functionality Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-btn {
+            padding: 10px 16px;
+            margin: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .test-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .test-btn.primary:hover {
+            background: #00a58e;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        #test-log {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Toggle Functionality Test</h1>
+        <p>This page tests all the toggle functionality features implemented in Step 3.</p>
+        
+        <div class="test-section">
+            <h3>Manual Tests</h3>
+            <p>Click these buttons to test the toggle functionality:</p>
+            <button class="test-btn primary" onclick="testToggle()">🔄 Test Toggle</button>
+            <button class="test-btn" onclick="testOpen()">🟢 Test Open</button>
+            <button class="test-btn" onclick="testClose()">🔴 Test Close</button>
+            <button class="test-btn" onclick="checkState()">📊 Check State</button>
+            <button class="test-btn" onclick="runAutomatedTests()">🤖 Run Automated Tests</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Keyboard Tests</h3>
+            <p>Test keyboard accessibility:</p>
+            <div class="status info">
+                <strong>Instructions:</strong><br>
+                • Press <kbd>Tab</kbd> to navigate to the feedback button<br>
+                • Press <kbd>Enter</kbd> or <kbd>Space</kbd> to toggle the widget<br>
+                • Press <kbd>ESC</kbd> to close the widget<br>
+                • Use <kbd>Tab</kbd>/<kbd>Shift+Tab</kbd> to navigate within the widget
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Animation Tests</h3>
+            <p>Test smooth animations:</p>
+            <button class="test-btn" onclick="testAnimations()">🎬 Test Animations</button>
+            <div id="animation-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <div id="test-results"></div>
+            <div id="test-log"></div>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Test Feedback',
+            placeholder: 'Test your feedback...',
+            showName: true,
+            showEmail: true
+        });
+
+        let testResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('test-log');
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(`[TEST] ${message}`);
+        }
+        
+        function showResult(message, success = true) {
+            const resultsElement = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${success ? 'success' : 'error'}`;
+            resultDiv.textContent = message;
+            resultsElement.appendChild(resultDiv);
+        }
+        
+        function testToggle() {
+            log('Testing toggle functionality...');
+            const initialState = FeedbackWidget.isOpen();
+            FeedbackWidget.toggle();
+            
+            setTimeout(() => {
+                const newState = FeedbackWidget.isOpen();
+                const success = newState !== initialState;
+                showResult(`Toggle test: ${success ? 'PASSED' : 'FAILED'} (${initialState} → ${newState})`, success);
+                log(`Toggle result: ${initialState} → ${newState}`);
+            }, 100);
+        }
+        
+        function testOpen() {
+            log('Testing open functionality...');
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                const isOpen = FeedbackWidget.isOpen();
+                showResult(`Open test: ${isOpen ? 'PASSED' : 'FAILED'}`, isOpen);
+                log(`Open result: ${isOpen}`);
+            }, 100);
+        }
+        
+        function testClose() {
+            log('Testing close functionality...');
+            FeedbackWidget.close();
+            
+            setTimeout(() => {
+                const isOpen = FeedbackWidget.isOpen();
+                showResult(`Close test: ${!isOpen ? 'PASSED' : 'FAILED'}`, !isOpen);
+                log(`Close result: ${!isOpen}`);
+            }, 100);
+        }
+        
+        function checkState() {
+            const isOpen = FeedbackWidget.isOpen();
+            log(`Current widget state: ${isOpen ? 'OPEN' : 'CLOSED'}`);
+            alert(`Widget is currently: ${isOpen ? 'OPEN' : 'CLOSED'}`);
+        }
+        
+        function testAnimations() {
+            log('Testing animation smoothness...');
+            const animationStatus = document.getElementById('animation-status');
+            
+            // Test multiple rapid toggles
+            let toggleCount = 0;
+            const maxToggles = 6;
+            
+            const toggleInterval = setInterval(() => {
+                FeedbackWidget.toggle();
+                toggleCount++;
+                animationStatus.innerHTML = `<div class="status info">Animation test ${toggleCount}/${maxToggles} - ${FeedbackWidget.isOpen() ? 'Opening' : 'Closing'}</div>`;
+                
+                if (toggleCount >= maxToggles) {
+                    clearInterval(toggleInterval);
+                    setTimeout(() => {
+                        animationStatus.innerHTML = '<div class="status success">Animation test completed! Check for smooth transitions.</div>';
+                        log('Animation test completed');
+                    }, 500);
+                }
+            }, 800);
+        }
+        
+        function runAutomatedTests() {
+            log('Starting automated test suite...');
+            testResults = [];
+            
+            // Clear previous results
+            document.getElementById('test-results').innerHTML = '';
+            
+            // Test 1: Initial state
+            const initialState = FeedbackWidget.isOpen();
+            log(`Initial state: ${initialState}`);
+            
+            // Test 2: Open widget
+            setTimeout(() => {
+                FeedbackWidget.open();
+                setTimeout(() => {
+                    const isOpen = FeedbackWidget.isOpen();
+                    testResults.push({test: 'Open', passed: isOpen});
+                    log(`Open test: ${isOpen ? 'PASSED' : 'FAILED'}`);
+                    
+                    // Test 3: Close widget
+                    setTimeout(() => {
+                        FeedbackWidget.close();
+                        setTimeout(() => {
+                            const isClosed = !FeedbackWidget.isOpen();
+                            testResults.push({test: 'Close', passed: isClosed});
+                            log(`Close test: ${isClosed ? 'PASSED' : 'FAILED'}`);
+                            
+                            // Test 4: Toggle from closed
+                            setTimeout(() => {
+                                FeedbackWidget.toggle();
+                                setTimeout(() => {
+                                    const toggledOpen = FeedbackWidget.isOpen();
+                                    testResults.push({test: 'Toggle Open', passed: toggledOpen});
+                                    log(`Toggle open test: ${toggledOpen ? 'PASSED' : 'FAILED'}`);
+                                    
+                                    // Test 5: Toggle from open
+                                    setTimeout(() => {
+                                        FeedbackWidget.toggle();
+                                        setTimeout(() => {
+                                            const toggledClosed = !FeedbackWidget.isOpen();
+                                            testResults.push({test: 'Toggle Close', passed: toggledClosed});
+                                            log(`Toggle close test: ${toggledClosed ? 'PASSED' : 'FAILED'}`);
+                                            
+                                            // Show final results
+                                            showFinalResults();
+                                        }, 400);
+                                    }, 400);
+                                }, 400);
+                            }, 400);
+                        }, 400);
+                    }, 400);
+                }, 400);
+            }, 100);
+        }
+        
+        function showFinalResults() {
+            const passed = testResults.filter(r => r.passed).length;
+            const total = testResults.length;
+            
+            log(`\n=== AUTOMATED TEST RESULTS ===`);
+            log(`Passed: ${passed}/${total}`);
+            
+            testResults.forEach(result => {
+                log(`${result.test}: ${result.passed ? 'PASSED' : 'FAILED'}`);
+                showResult(`${result.test}: ${result.passed ? 'PASSED' : 'FAILED'}`, result.passed);
+            });
+            
+            const allPassed = passed === total;
+            showResult(`Overall: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'} (${passed}/${total})`, allPassed);
+            log(`\nAutomated testing completed.`);
+        }
+        
+        // Set up event monitoring
+        window.addEventListener('feedbackWidget:opened', function(e) {
+            log('🟢 Widget opened event fired');
+        });
+        
+        window.addEventListener('feedbackWidget:closed', function(e) {
+            log('🔴 Widget closed event fired');
+        });
+        
+        // Initial log
+        log('Toggle functionality test page loaded');
+        log('Widget initialized and ready for testing');
+    </script>
+</body>
+</html>

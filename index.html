@@ -142,9 +142,11 @@
             <h2>Widget Controls</h2>
             <p>Use these buttons to test the widget functionality:</p>
             <div class="demo-controls">
-                <button class="demo-btn primary" onclick="FeedbackWidget.open()">Open Widget</button>
+                <button class="demo-btn primary" onclick="FeedbackWidget.toggle()">Toggle Widget</button>
+                <button class="demo-btn" onclick="FeedbackWidget.open()">Open Widget</button>
                 <button class="demo-btn" onclick="FeedbackWidget.close()">Close Widget</button>
                 <button class="demo-btn" onclick="reinitializeWidget()">Reinitialize</button>
+                <button class="demo-btn" onclick="checkWidgetState()">Check State</button>
             </div>
         </div>
         
@@ -226,6 +228,7 @@
                 <li>✅ <strong>Improved click outside to close functionality</strong></li>
                 <li>✅ <strong>Body scroll prevention when widget is open</strong></li>
                 <li>✅ <strong>Smooth toggle animations with cubic-bezier easing</strong></li>
+                <li>✅ <strong>Toggle functionality with click and keyboard support</strong></li>
                 <li>✅ <strong>ARIA attributes for screen readers</strong></li>
                 <li>✅ <strong>Focus management and restoration</strong></li>
                 <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed)</strong></li>
@@ -346,6 +349,11 @@
 
         function reinitializeWidget() {
             updateWidget();
+        }
+
+        function checkWidgetState() {
+            const isOpen = FeedbackWidget.isOpen();
+            alert(`Widget is currently: ${isOpen ? 'OPEN' : 'CLOSED'}`);
         }
 
         function updateCodeExample() {
