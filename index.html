@@ -147,6 +147,7 @@
                 <button class="demo-btn" onclick="FeedbackWidget.close()">Close Widget</button>
                 <button class="demo-btn" onclick="reinitializeWidget()">Reinitialize</button>
                 <button class="demo-btn" onclick="checkWidgetState()">Check State</button>
+                <button class="demo-btn" onclick="openResponsiveTest()">📱 Responsive Test</button>
             </div>
         </div>
         
@@ -229,13 +230,35 @@
                 <li>✅ <strong>Body scroll prevention when widget is open</strong></li>
                 <li>✅ <strong>Smooth toggle animations with cubic-bezier easing</strong></li>
                 <li>✅ <strong>Toggle functionality with click and keyboard support</strong></li>
+                <li>✅ <strong>Mobile-first responsive design with breakpoint optimization</strong></li>
+                <li>✅ <strong>Enhanced z-index management (max safe z-index: 2147483647)</strong></li>
+                <li>✅ <strong>Comprehensive CSS reset to prevent host site interference</strong></li>
+                <li>✅ <strong>Automatic dark/light theme detection and adaptation</strong></li>
+                <li>✅ <strong>High contrast and reduced motion accessibility support</strong></li>
                 <li>✅ <strong>ARIA attributes for screen readers</strong></li>
                 <li>✅ <strong>Focus management and restoration</strong></li>
-                <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed)</strong></li>
+                <li>✅ <strong>Custom events (feedbackWidget:opened, feedbackWidget:closed, feedbackWidget:themeChanged)</strong></li>
                 <li>✅ Loading states and success/error messages</li>
                 <li>✅ CSS reset to prevent host site style conflicts</li>
                 <li>✅ Customizable colors, position, and text</li>
             </ul>
+        </div>
+
+        <div class="demo-section">
+            <h2>Responsive Design Features</h2>
+            <ul style="color: #374151; line-height: 1.8;">
+                <li>📱 <strong>Mobile-First Approach:</strong> Optimized for mobile devices with progressive enhancement</li>
+                <li>🎯 <strong>Touch-Friendly Targets:</strong> Minimum 48px touch targets on mobile devices</li>
+                <li>📐 <strong>Adaptive Sizing:</strong> Button and panel sizes adapt to screen size</li>
+                <li>🔄 <strong>Smart Positioning:</strong> Bottom-center on mobile, configurable on desktop</li>
+                <li>🌙 <strong>Theme Detection:</strong> Automatic dark/light theme adaptation</li>
+                <li>♿ <strong>Accessibility Support:</strong> High contrast and reduced motion preferences</li>
+                <li>🛡️ <strong>CSS Isolation:</strong> Comprehensive reset prevents host site interference</li>
+                <li>⚡ <strong>Maximum Z-Index:</strong> Ensures widget appears above all content</li>
+            </ul>
+            <div style="margin-top: 16px;">
+                <button class="demo-btn primary" onclick="openResponsiveTest()">📱 Open Responsive Test Page</button>
+            </div>
         </div>
 
         <div class="demo-section">
@@ -354,6 +377,10 @@
         function checkWidgetState() {
             const isOpen = FeedbackWidget.isOpen();
             alert(`Widget is currently: ${isOpen ? 'OPEN' : 'CLOSED'}`);
+        }
+
+        function openResponsiveTest() {
+            window.open('test-responsive.html', '_blank');
         }
 
         function updateCodeExample() {

@@ -99,6 +99,10 @@
         
         // Set up event listeners
         setupEventListeners();
+
+        // Set up theme detection and listener
+        setupThemeListener();
+        updateThemeClass(detectTheme());
     }
     
     /**
@@ -583,15 +587,68 @@
     /**
      * Dispatch custom widget events
      */
-    function dispatchWidgetEvent(eventType) {
+    function dispatchWidgetEvent(eventType, additionalData = {}) {
         const event = new CustomEvent(`feedbackWidget:${eventType}`, {
             detail: {
                 widget: 'feedback',
                 timestamp: Date.now(),
-                config: config
+                config: config,
+                ...additionalData
             }
         });
         window.dispatchEvent(event);
+    }
+
+    /**
+     * Detect user's theme preference
+     */
+    function detectTheme() {
+        // Check for explicit theme setting in config
+        if (config.theme && config.theme !== 'auto') {
+            return config.theme;
+        }
+
+        // Auto-detect based on system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+
+        return 'light';
+    }
+
+    /**
+     * Set up theme change listener
+     */
+    function setupThemeListener() {
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Listen for theme changes
+            const handleThemeChange = (e) => {
+                if (config.theme === 'auto' || !config.theme) {
+                    updateThemeClass(e.matches ? 'dark' : 'light');
+                    dispatchWidgetEvent('themeChanged', { theme: e.matches ? 'dark' : 'light' });
+                }
+            };
+
+            // Use modern addEventListener if available, fallback for older browsers
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleThemeChange);
+            } else {
+                // Legacy browsers - suppress deprecation warning as this is intentional fallback
+                mediaQuery.addListener(handleThemeChange);
+            }
+        }
+    }
+
+    /**
+     * Update theme class on widget container
+     */
+    function updateThemeClass(theme) {
+        if (widgetContainer) {
+            widgetContainer.classList.remove('feedback-widget-theme-light', 'feedback-widget-theme-dark');
+            widgetContainer.classList.add(`feedback-widget-theme-${theme}`);
+        }
     }
 
     /**
@@ -606,288 +663,377 @@
         const style = document.createElement('style');
         style.id = 'feedback-widget-styles';
         style.textContent = `
-            /* CSS Reset for widget elements */
+            /* ===== COMPREHENSIVE CSS RESET FOR WIDGET ===== */
             .feedback-widget-container,
-            .feedback-widget-container * {
+            .feedback-widget-container *,
+            .feedback-widget-container *::before,
+            .feedback-widget-container *::after {
                 box-sizing: border-box;
                 margin: 0;
                 padding: 0;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                border: 0;
+                font-size: 100%;
+                font: inherit;
+                vertical-align: baseline;
+                background: transparent;
+                color: inherit;
+                text-decoration: none;
+                list-style: none;
+                outline: none;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
                 line-height: 1.5;
             }
 
-            /* Main container */
-            .feedback-widget-container {
-                position: fixed;
-                z-index: 999999;
-                pointer-events: none;
-            }
-
-            /* Floating Button */
-            .feedback-widget-button {
-                position: fixed;
-                z-index: 1000000;
-                background: ${config.primaryColor};
-                color: white;
+            /* Reset form elements specifically */
+            .feedback-widget-container input,
+            .feedback-widget-container textarea,
+            .feedback-widget-container button,
+            .feedback-widget-container select {
+                font-family: inherit;
+                font-size: inherit;
+                line-height: inherit;
+                color: inherit;
+                background: transparent;
                 border: none;
-                border-radius: 50px;
-                padding: 12px 20px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                pointer-events: auto;
-                user-select: none;
-                font-size: 14px;
-                font-weight: 500;
+                outline: none;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
             }
 
+            /* Prevent host site styles from interfering */
+            .feedback-widget-container {
+                all: initial;
+                position: fixed !important;
+                z-index: 2147483647 !important; /* Maximum safe z-index */
+                pointer-events: none !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif !important;
+                font-size: 14px !important;
+                line-height: 1.5 !important;
+                color: #1f2937 !important;
+                text-align: left !important;
+                direction: ltr !important;
+            }
+
+            /* ===== MOBILE-FIRST FLOATING BUTTON ===== */
+            .feedback-widget-button {
+                position: fixed !important;
+                z-index: 2147483646 !important; /* Just below container */
+                background: ${config.primaryColor} !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 50px !important;
+                cursor: pointer !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                pointer-events: auto !important;
+                user-select: none !important;
+                font-weight: 500 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+
+                /* Mobile-first sizing */
+                padding: 12px !important;
+                font-size: 0 !important; /* Hide text on mobile by default */
+                width: 56px !important;
+                height: 56px !important;
+                min-width: 56px !important;
+                min-height: 56px !important;
+            }
+
+            /* Button interaction states */
             .feedback-widget-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+                background: ${config.primaryColor}dd !important;
             }
 
             .feedback-widget-button:focus {
-                outline: none;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 3px ${config.primaryColor}40;
+                outline: none !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 3px ${config.primaryColor}40 !important;
             }
 
             .feedback-widget-button:active {
-                transform: translateY(0);
-                transition-duration: 0.1s;
+                transform: translateY(0) !important;
+                transition-duration: 0.1s !important;
             }
 
             .feedback-widget-button-hidden {
-                opacity: 0;
-                transform: scale(0.8) translateY(-2px);
-                pointer-events: none;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0 !important;
+                transform: scale(0.8) translateY(-2px) !important;
+                pointer-events: none !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
 
+            /* Button content layout */
             .feedback-widget-button-content {
-                display: flex;
-                align-items: center;
-                gap: 8px;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                width: 100% !important;
+                height: 100% !important;
             }
 
+            /* Button text - hidden on mobile by default */
             .feedback-widget-button-text {
-                white-space: nowrap;
+                display: none !important;
+                white-space: nowrap !important;
+                font-size: 14px !important;
+                font-weight: 500 !important;
             }
 
-            /* Position variants */
-            .feedback-widget-bottom-right {
-                bottom: 20px;
-                right: 20px;
+            /* Button icon */
+            .feedback-widget-button svg {
+                width: 20px !important;
+                height: 20px !important;
+                flex-shrink: 0 !important;
             }
 
-            .feedback-widget-bottom-left {
-                bottom: 20px;
-                left: 20px;
-            }
-
-            .feedback-widget-top-right {
-                top: 20px;
-                right: 20px;
-            }
-
+            /* ===== MOBILE-FIRST POSITION VARIANTS ===== */
+            /* Mobile positioning - always bottom center for better UX */
+            .feedback-widget-bottom-right,
+            .feedback-widget-bottom-left,
+            .feedback-widget-top-right,
             .feedback-widget-top-left {
-                top: 20px;
-                left: 20px;
+                bottom: 16px !important;
+                right: 16px !important;
+                left: auto !important;
+                top: auto !important;
             }
 
-            /* Feedback Panel */
+            /* ===== MOBILE-FIRST FEEDBACK PANEL ===== */
             .feedback-widget-panel {
-                position: fixed;
-                z-index: 1000001;
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-                width: 360px;
-                max-width: calc(100vw - 40px);
-                max-height: calc(100vh - 40px);
-                overflow: hidden;
-                transform: scale(0.8) translateY(20px);
-                opacity: 0;
-                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-                pointer-events: none;
-                will-change: transform, opacity;
-                visibility: hidden;
+                position: fixed !important;
+                z-index: 2147483645 !important; /* Below button */
+                background: white !important;
+                border-radius: 12px !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+                overflow: hidden !important;
+                transform: scale(0.8) translateY(20px) !important;
+                opacity: 0 !important;
+                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                pointer-events: none !important;
+                will-change: transform, opacity !important;
+                visibility: hidden !important;
+
+                /* Mobile-first sizing - full width with margins */
+                width: calc(100vw - 32px) !important;
+                max-width: calc(100vw - 32px) !important;
+                max-height: calc(100vh - 100px) !important;
+                left: 16px !important;
+                right: 16px !important;
+                bottom: 80px !important;
+                top: auto !important;
+                transform-origin: bottom center !important;
             }
 
+            /* Panel animation states */
             .feedback-widget-panel-opening {
-                visibility: visible;
-                pointer-events: auto;
+                visibility: visible !important;
+                pointer-events: auto !important;
             }
 
             .feedback-widget-panel-open {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-                pointer-events: auto;
-                visibility: visible;
+                transform: scale(1) translateY(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                visibility: visible !important;
             }
 
             .feedback-widget-panel-closing {
-                transform: scale(0.8) translateY(20px);
-                opacity: 0;
-                pointer-events: none;
-                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: scale(0.8) translateY(20px) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
 
             .feedback-widget-panel:focus-within {
-                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px ${config.primaryColor}40;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 2px ${config.primaryColor}40 !important;
             }
 
-            /* Panel positioning */
-            .feedback-widget-panel.feedback-widget-bottom-right {
-                bottom: 80px;
-                right: 20px;
-                transform-origin: bottom right;
-            }
-
-            .feedback-widget-panel.feedback-widget-bottom-left {
-                bottom: 80px;
-                left: 20px;
-                transform-origin: bottom left;
-            }
-
-            .feedback-widget-panel.feedback-widget-top-right {
-                top: 80px;
-                right: 20px;
-                transform-origin: top right;
-            }
-
+            /* Mobile-first panel positioning - all positions use bottom center on mobile */
+            .feedback-widget-panel.feedback-widget-bottom-right,
+            .feedback-widget-panel.feedback-widget-bottom-left,
+            .feedback-widget-panel.feedback-widget-top-right,
             .feedback-widget-panel.feedback-widget-top-left {
-                top: 80px;
-                left: 20px;
-                transform-origin: top left;
+                bottom: 80px !important;
+                left: 16px !important;
+                right: 16px !important;
+                top: auto !important;
+                transform-origin: bottom center !important;
             }
 
+            /* ===== MOBILE-FIRST PANEL CONTENT ===== */
             .feedback-widget-panel-content {
-                padding: 24px;
+                padding: 20px !important;
+                height: 100% !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
 
             /* Header */
             .feedback-widget-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 16px !important;
+                flex-shrink: 0 !important;
             }
 
             .feedback-widget-title {
-                font-size: 18px;
-                font-weight: 600;
-                color: #1f2937;
-                margin: 0;
+                font-size: 18px !important;
+                font-weight: 600 !important;
+                color: #1f2937 !important;
+                margin: 0 !important;
+                line-height: 1.3 !important;
             }
 
             .feedback-widget-close {
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 4px;
-                border-radius: 6px;
-                color: #6b7280;
-                transition: all 0.2s ease;
+                background: none !important;
+                border: none !important;
+                cursor: pointer !important;
+                padding: 8px !important;
+                border-radius: 6px !important;
+                color: #6b7280 !important;
+                transition: all 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                min-width: 32px !important;
+                min-height: 32px !important;
+                flex-shrink: 0 !important;
             }
 
             .feedback-widget-close:hover {
-                background: #f3f4f6;
-                color: #374151;
+                background: #f3f4f6 !important;
+                color: #374151 !important;
             }
 
-            /* Form */
+            .feedback-widget-close:focus {
+                outline: none !important;
+                box-shadow: 0 0 0 2px ${config.primaryColor}40 !important;
+            }
+
+            /* ===== MOBILE-FIRST FORM STYLES ===== */
             .feedback-widget-form {
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 16px !important;
+                flex: 1 !important;
+                min-height: 0 !important;
             }
 
             .feedback-widget-field {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
             }
 
             .feedback-widget-label {
-                font-size: 14px;
-                font-weight: 500;
-                color: #374151;
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                color: #374151 !important;
+                line-height: 1.4 !important;
             }
 
             .feedback-widget-required {
-                color: #ef4444;
+                color: #ef4444 !important;
             }
 
             .feedback-widget-input,
             .feedback-widget-textarea {
-                padding: 12px;
-                border: 1px solid #d1d5db;
-                border-radius: 8px;
-                font-size: 14px;
-                transition: border-color 0.2s ease;
-                background: white;
-                color: #1f2937;
+                padding: 12px !important;
+                border: 1px solid #d1d5db !important;
+                border-radius: 8px !important;
+                font-size: 16px !important; /* Prevent zoom on iOS */
+                transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+                background: white !important;
+                color: #1f2937 !important;
+                width: 100% !important;
+                -webkit-appearance: none !important;
+                appearance: none !important;
             }
 
             .feedback-widget-input:focus,
             .feedback-widget-textarea:focus {
-                outline: none;
-                border-color: ${config.primaryColor};
-                box-shadow: 0 0 0 3px ${config.primaryColor}20;
+                outline: none !important;
+                border-color: ${config.primaryColor} !important;
+                box-shadow: 0 0 0 3px ${config.primaryColor}20 !important;
             }
 
             .feedback-widget-textarea {
-                resize: vertical;
-                min-height: 80px;
+                resize: vertical !important;
+                min-height: 80px !important;
+                max-height: 120px !important;
+                font-family: inherit !important;
             }
 
-            /* Actions */
+            /* ===== MOBILE-FIRST ACTIONS ===== */
             .feedback-widget-actions {
-                display: flex;
-                gap: 12px;
-                margin-top: 8px;
+                display: flex !important;
+                gap: 12px !important;
+                margin-top: 16px !important;
+                flex-shrink: 0 !important;
+                /* Mobile: stack buttons vertically for better touch targets */
+                flex-direction: column !important;
             }
 
             .feedback-widget-btn {
-                padding: 10px 16px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                border: none;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                flex: 1;
+                padding: 14px 16px !important; /* Larger touch targets on mobile */
+                border-radius: 8px !important;
+                font-size: 16px !important; /* Prevent zoom on iOS */
+                font-weight: 500 !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                border: none !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                width: 100% !important;
+                min-height: 48px !important; /* Minimum touch target size */
+                text-align: center !important;
+                -webkit-appearance: none !important;
+                appearance: none !important;
             }
 
             .feedback-widget-btn-secondary {
-                background: #f3f4f6;
-                color: #374151;
+                background: #f3f4f6 !important;
+                color: #374151 !important;
+                border: 1px solid #e5e7eb !important;
             }
 
             .feedback-widget-btn-secondary:hover {
-                background: #e5e7eb;
+                background: #e5e7eb !important;
             }
 
             .feedback-widget-btn-primary {
-                background: ${config.primaryColor};
-                color: white;
+                background: ${config.primaryColor} !important;
+                color: white !important;
             }
 
             .feedback-widget-btn-primary:hover {
-                background: ${config.primaryColor}dd;
+                background: ${config.primaryColor}dd !important;
             }
 
             .feedback-widget-btn:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
+                opacity: 0.6 !important;
+                cursor: not-allowed !important;
+            }
+
+            .feedback-widget-btn:focus {
+                outline: none !important;
+                box-shadow: 0 0 0 3px ${config.primaryColor}40 !important;
             }
 
             .feedback-widget-loading {
-                animation: feedback-widget-spin 1s linear infinite;
+                animation: feedback-widget-spin 1s linear infinite !important;
             }
 
             @keyframes feedback-widget-spin {
@@ -895,114 +1041,262 @@
                 to { transform: rotate(360deg); }
             }
 
-            /* Messages */
+            /* ===== MOBILE-FIRST MESSAGES ===== */
             .feedback-widget-message {
-                display: flex;
-                gap: 12px;
-                padding: 16px;
-                border-radius: 8px;
-                margin-top: 8px;
+                display: flex !important;
+                gap: 12px !important;
+                padding: 16px !important;
+                border-radius: 8px !important;
+                margin-top: 16px !important;
+                align-items: flex-start !important;
             }
 
             .feedback-widget-success {
-                background: #f0fdf4;
-                border: 1px solid #bbf7d0;
-                color: #166534;
+                background: #f0fdf4 !important;
+                border: 1px solid #bbf7d0 !important;
+                color: #166534 !important;
             }
 
             .feedback-widget-error {
-                background: #fef2f2;
-                border: 1px solid #fecaca;
-                color: #dc2626;
+                background: #fef2f2 !important;
+                border: 1px solid #fecaca !important;
+                color: #dc2626 !important;
             }
 
             .feedback-widget-message-icon {
-                flex-shrink: 0;
+                flex-shrink: 0 !important;
+                margin-top: 2px !important;
             }
 
             .feedback-widget-message-content h4 {
-                font-size: 14px;
-                font-weight: 600;
-                margin-bottom: 4px;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                margin-bottom: 4px !important;
+                line-height: 1.3 !important;
             }
 
             .feedback-widget-message-content p {
-                font-size: 13px;
-                margin: 0;
+                font-size: 13px !important;
+                margin: 0 !important;
+                line-height: 1.4 !important;
             }
 
-            /* Mobile responsiveness */
-            @media (max-width: 480px) {
-                .feedback-widget-panel {
-                    width: calc(100vw - 20px);
-                    left: 10px !important;
-                    right: 10px !important;
-                    bottom: 10px !important;
-                    top: auto !important;
-                    transform-origin: bottom center;
-                }
+            /* ===== RESPONSIVE BREAKPOINTS ===== */
 
+            /* Tablet styles (768px and up) */
+            @media (min-width: 768px) {
                 .feedback-widget-button {
-                    padding: 10px 16px;
-                    font-size: 13px;
+                    padding: 12px 16px !important;
+                    width: auto !important;
+                    height: auto !important;
+                    min-width: 48px !important;
+                    min-height: 48px !important;
                 }
 
                 .feedback-widget-button-text {
-                    display: none;
+                    display: inline !important;
+                    font-size: 14px !important;
+                }
+
+                .feedback-widget-panel {
+                    width: 380px !important;
+                    max-width: calc(100vw - 40px) !important;
+                    left: auto !important;
+                    right: 20px !important;
+                    bottom: 80px !important;
                 }
 
                 .feedback-widget-panel-content {
-                    padding: 20px;
+                    padding: 24px !important;
                 }
 
                 .feedback-widget-actions {
-                    flex-direction: column;
-                }
-            }
-
-            /* Dark theme support */
-            @media (prefers-color-scheme: dark) {
-                .feedback-widget-panel {
-                    background: #1f2937;
-                    color: #f9fafb;
+                    flex-direction: row !important;
                 }
 
-                .feedback-widget-title {
-                    color: #f9fafb;
-                }
-
-                .feedback-widget-close {
-                    color: #9ca3af;
-                }
-
-                .feedback-widget-close:hover {
-                    background: #374151;
-                    color: #f3f4f6;
-                }
-
-                .feedback-widget-label {
-                    color: #e5e7eb;
+                .feedback-widget-btn {
+                    padding: 12px 16px !important;
+                    font-size: 14px !important;
+                    min-height: 44px !important;
+                    flex: 1 !important;
                 }
 
                 .feedback-widget-input,
                 .feedback-widget-textarea {
-                    background: #374151;
-                    border-color: #4b5563;
-                    color: #f9fafb;
+                    font-size: 14px !important;
+                }
+            }
+
+            /* Desktop styles (1024px and up) */
+            @media (min-width: 1024px) {
+                .feedback-widget-button {
+                    padding: 12px 20px !important;
+                }
+
+                .feedback-widget-panel {
+                    width: 400px !important;
+                }
+
+                /* Position-specific styles for desktop */
+                .feedback-widget-bottom-right {
+                    bottom: 20px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    top: auto !important;
+                }
+
+                .feedback-widget-bottom-left {
+                    bottom: 20px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    top: auto !important;
+                }
+
+                .feedback-widget-top-right {
+                    top: 20px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    bottom: auto !important;
+                }
+
+                .feedback-widget-top-left {
+                    top: 20px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    bottom: auto !important;
+                }
+
+                /* Panel positioning for desktop */
+                .feedback-widget-panel.feedback-widget-bottom-right {
+                    bottom: 80px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    top: auto !important;
+                    transform-origin: bottom right !important;
+                }
+
+                .feedback-widget-panel.feedback-widget-bottom-left {
+                    bottom: 80px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    top: auto !important;
+                    transform-origin: bottom left !important;
+                }
+
+                .feedback-widget-panel.feedback-widget-top-right {
+                    top: 80px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    bottom: auto !important;
+                    transform-origin: top right !important;
+                }
+
+                .feedback-widget-panel.feedback-widget-top-left {
+                    top: 80px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    bottom: auto !important;
+                    transform-origin: top left !important;
+                }
+            }
+
+            /* ===== ENHANCED DARK THEME SUPPORT ===== */
+            @media (prefers-color-scheme: dark) {
+                .feedback-widget-panel {
+                    background: #1f2937 !important;
+                    color: #f9fafb !important;
+                    border: 1px solid #374151 !important;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                }
+
+                .feedback-widget-title {
+                    color: #f9fafb !important;
+                }
+
+                .feedback-widget-close {
+                    color: #9ca3af !important;
+                }
+
+                .feedback-widget-close:hover {
+                    background: #374151 !important;
+                    color: #f3f4f6 !important;
+                }
+
+                .feedback-widget-label {
+                    color: #e5e7eb !important;
+                }
+
+                .feedback-widget-input,
+                .feedback-widget-textarea {
+                    background: #374151 !important;
+                    border-color: #4b5563 !important;
+                    color: #f9fafb !important;
                 }
 
                 .feedback-widget-input:focus,
                 .feedback-widget-textarea:focus {
-                    border-color: ${config.primaryColor};
+                    border-color: ${config.primaryColor} !important;
+                    background: #374151 !important;
+                }
+
+                .feedback-widget-input::placeholder,
+                .feedback-widget-textarea::placeholder {
+                    color: #9ca3af !important;
                 }
 
                 .feedback-widget-btn-secondary {
-                    background: #374151;
-                    color: #e5e7eb;
+                    background: #374151 !important;
+                    color: #e5e7eb !important;
+                    border-color: #4b5563 !important;
                 }
 
                 .feedback-widget-btn-secondary:hover {
-                    background: #4b5563;
+                    background: #4b5563 !important;
+                }
+
+                .feedback-widget-success {
+                    background: #064e3b !important;
+                    border-color: #065f46 !important;
+                    color: #a7f3d0 !important;
+                }
+
+                .feedback-widget-error {
+                    background: #7f1d1d !important;
+                    border-color: #991b1b !important;
+                    color: #fca5a5 !important;
+                }
+            }
+
+            /* High contrast mode support */
+            @media (prefers-contrast: high) {
+                .feedback-widget-panel {
+                    border: 2px solid currentColor !important;
+                }
+
+                .feedback-widget-input,
+                .feedback-widget-textarea {
+                    border: 2px solid currentColor !important;
+                }
+
+                .feedback-widget-btn {
+                    border: 2px solid currentColor !important;
+                }
+            }
+
+            /* Reduced motion support */
+            @media (prefers-reduced-motion: reduce) {
+                .feedback-widget-button,
+                .feedback-widget-panel,
+                .feedback-widget-btn,
+                .feedback-widget-input,
+                .feedback-widget-textarea,
+                .feedback-widget-close {
+                    transition: none !important;
+                    animation: none !important;
+                }
+
+                .feedback-widget-loading {
+                    animation: none !important;
                 }
             }
         `;

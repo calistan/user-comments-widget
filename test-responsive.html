@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Design Test - Feedback Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            min-height: 200vh; /* Make page scrollable for testing */
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-btn {
+            padding: 10px 16px;
+            margin: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .test-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .test-btn.primary:hover {
+            background: #00a58e;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .breakpoint-indicator {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000000;
+        }
+        
+        .theme-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000000;
+        }
+        
+        @media (max-width: 767px) {
+            .breakpoint-indicator::after {
+                content: "📱 Mobile";
+            }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .breakpoint-indicator::after {
+                content: "📟 Tablet";
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .breakpoint-indicator::after {
+                content: "🖥️ Desktop";
+            }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .theme-indicator::after {
+                content: "🌙 Dark";
+            }
+        }
+        
+        @media (prefers-color-scheme: light) {
+            .theme-indicator::after {
+                content: "☀️ Light";
+            }
+        }
+        
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .position-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .scroll-content {
+            height: 100vh;
+            background: linear-gradient(45deg, #f0f9ff, #e0f2fe);
+            margin: 20px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="breakpoint-indicator"></div>
+    <div class="theme-indicator"></div>
+    
+    <div class="test-container">
+        <h1>📱 Responsive Design Test</h1>
+        <p>Test the feedback widget across different screen sizes and themes.</p>
+        
+        <div class="test-section">
+            <h3>Current Environment</h3>
+            <div id="environment-info" class="status info">
+                <div>Screen: <span id="screen-size"></span></div>
+                <div>Viewport: <span id="viewport-size"></span></div>
+                <div>Theme: <span id="theme-preference"></span></div>
+                <div>Touch: <span id="touch-support"></span></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Widget Position Tests</h3>
+            <p>Test the widget in different positions:</p>
+            <div class="position-grid">
+                <button class="test-btn" onclick="testPosition('bottom-right')">Bottom Right</button>
+                <button class="test-btn" onclick="testPosition('bottom-left')">Bottom Left</button>
+                <button class="test-btn" onclick="testPosition('top-right')">Top Right</button>
+                <button class="test-btn" onclick="testPosition('top-left')">Top Left</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Theme Tests</h3>
+            <p>Test theme adaptation:</p>
+            <button class="test-btn primary" onclick="FeedbackWidget.toggle()">Toggle Widget</button>
+            <button class="test-btn" onclick="testThemeDetection()">Test Theme Detection</button>
+            <div id="theme-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Responsive Breakpoint Tests</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Mobile (< 768px)</h4>
+                    <ul>
+                        <li>Button shows icon only</li>
+                        <li>Panel full width with margins</li>
+                        <li>Buttons stack vertically</li>
+                        <li>Larger touch targets</li>
+                    </ul>
+                </div>
+                <div class="test-card">
+                    <h4>Tablet (768px - 1023px)</h4>
+                    <ul>
+                        <li>Button shows text + icon</li>
+                        <li>Panel 380px width</li>
+                        <li>Buttons side by side</li>
+                        <li>Positioned bottom-right</li>
+                    </ul>
+                </div>
+                <div class="test-card">
+                    <h4>Desktop (1024px+)</h4>
+                    <ul>
+                        <li>Full positioning options</li>
+                        <li>Panel 400px width</li>
+                        <li>Position-specific origins</li>
+                        <li>Hover effects enabled</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Scroll Prevention Test</h3>
+            <p>Open the widget and try to scroll this content:</p>
+            <div class="scroll-content">
+                <div>
+                    <h4>Scrollable Content Area</h4>
+                    <p>When the widget is open, you should not be able to scroll this content.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Z-Index Test</h3>
+            <p>The widget should appear above all content with maximum z-index.</p>
+            <div style="position: relative; z-index: 999998; background: #fef3c7; padding: 20px; border-radius: 8px;">
+                <strong>High Z-Index Content (999998)</strong>
+                <p>The widget should still appear above this content.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Responsive Test',
+            placeholder: 'Test responsive feedback...',
+            showName: true,
+            showEmail: true
+        });
+
+        // Update environment info
+        function updateEnvironmentInfo() {
+            document.getElementById('screen-size').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('viewport-size').textContent = `${window.innerWidth}x${window.innerHeight}`;
+            document.getElementById('theme-preference').textContent = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
+            document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+        }
+
+        // Test position changes
+        function testPosition(position) {
+            // Remove existing widget
+            const existingContainer = document.getElementById('feedback-widget-container');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+
+            // Remove existing styles
+            const existingStyles = document.getElementById('feedback-widget-styles');
+            if (existingStyles) {
+                existingStyles.remove();
+            }
+
+            // Reinitialize with new position
+            FeedbackWidget.init({
+                position: position,
+                primaryColor: '#00C2A8',
+                title: `${position} Test`,
+                placeholder: 'Test responsive feedback...',
+                showName: true,
+                showEmail: true
+            });
+        }
+
+        // Test theme detection
+        function testThemeDetection() {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const themeStatus = document.getElementById('theme-status');
+            themeStatus.innerHTML = `
+                <div class="status info">
+                    <strong>Theme Detection:</strong><br>
+                    System preference: ${isDark ? 'Dark' : 'Light'}<br>
+                    Media query support: ${window.matchMedia ? 'Yes' : 'No'}<br>
+                    Current time: ${new Date().toLocaleTimeString()}
+                </div>
+            `;
+        }
+
+        // Listen for theme changes
+        window.addEventListener('feedbackWidget:themeChanged', function(e) {
+            console.log('Theme changed:', e.detail);
+            updateEnvironmentInfo();
+        });
+
+        // Update info on resize
+        window.addEventListener('resize', updateEnvironmentInfo);
+
+        // Initial update
+        updateEnvironmentInfo();
+        
+        // Update every second to show real-time changes
+        setInterval(updateEnvironmentInfo, 1000);
+    </script>
+</body>
+</html>
