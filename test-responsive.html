@@ -193,7 +193,17 @@
                 <div>Viewport: <span id="viewport-size"></span></div>
                 <div>Theme: <span id="theme-preference"></span></div>
                 <div>Touch: <span id="touch-support"></span></div>
+                <div>Mobile Height Category: <span id="height-category"></span></div>
             </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Mobile Height Fix Tests</h3>
+            <p>Test the mobile height adjustments:</p>
+            <button class="test-btn primary" onclick="testMobileHeight()">📏 Test Mobile Height</button>
+            <button class="test-btn" onclick="simulateSmallScreen()">📱 Simulate Small Screen</button>
+            <button class="test-btn" onclick="simulateLandscape()">🔄 Simulate Landscape</button>
+            <div id="mobile-height-status"></div>
         </div>
         
         <div class="test-section">
@@ -284,10 +294,17 @@
 
         // Update environment info
         function updateEnvironmentInfo() {
+            const height = window.innerHeight;
+            let heightCategory = 'Large';
+            if (height < 500) heightCategory = 'Extra Small (Landscape)';
+            else if (height < 600) heightCategory = 'Small';
+            else if (height < 800) heightCategory = 'Medium';
+
             document.getElementById('screen-size').textContent = `${screen.width}x${screen.height}`;
             document.getElementById('viewport-size').textContent = `${window.innerWidth}x${window.innerHeight}`;
             document.getElementById('theme-preference').textContent = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
             document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+            document.getElementById('height-category').textContent = heightCategory;
         }
 
         // Test position changes
@@ -329,9 +346,44 @@
             `;
         }
 
+        // Test mobile height adjustments
+        function testMobileHeight() {
+            const height = window.innerHeight;
+            const width = window.innerWidth;
+            const isMobile = width < 768;
+
+            FeedbackWidget.open();
+
+            const status = document.getElementById('mobile-height-status');
+            status.innerHTML = `
+                <div class="status info">
+                    <strong>Mobile Height Test Results:</strong><br>
+                    Viewport: ${width}x${height}<br>
+                    Is Mobile: ${isMobile}<br>
+                    Height Category: ${height < 500 ? 'Extra Small' : height < 600 ? 'Small' : 'Normal'}<br>
+                    Expected Max Height: ${isMobile ? (height < 500 ? height - 80 : height < 600 ? height - 120 : height - 160) : 'N/A (Desktop)'}px<br>
+                    Widget should ${height < 600 && isMobile ? 'fit comfortably' : 'use standard sizing'}
+                </div>
+            `;
+        }
+
+        function simulateSmallScreen() {
+            alert('To test small screens:\n1. Open browser dev tools (F12)\n2. Toggle device toolbar\n3. Select iPhone SE or similar\n4. Test widget in portrait and landscape');
+        }
+
+        function simulateLandscape() {
+            alert('To test landscape mode:\n1. Rotate your device (mobile)\n2. Or use dev tools device simulation\n3. Test widget with reduced height\n4. Check that content is scrollable');
+        }
+
         // Listen for theme changes
         window.addEventListener('feedbackWidget:themeChanged', function(e) {
             console.log('Theme changed:', e.detail);
+            updateEnvironmentInfo();
+        });
+
+        // Listen for viewport changes
+        window.addEventListener('feedbackWidget:viewportChanged', function(e) {
+            console.log('Viewport changed:', e.detail);
             updateEnvironmentInfo();
         });
 
@@ -340,7 +392,7 @@
 
         // Initial update
         updateEnvironmentInfo();
-        
+
         // Update every second to show real-time changes
         setInterval(updateEnvironmentInfo, 1000);
     </script>

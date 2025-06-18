@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form State Test - Feedback Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-btn {
+            padding: 10px 16px;
+            margin: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .test-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .test-btn.primary:hover {
+            background: #00a58e;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        #test-log {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Form State Test</h1>
+        <p>Test that the feedback widget shows the correct initial state without premature success messages.</p>
+        
+        <div class="test-section">
+            <h3>Initial State Test</h3>
+            <p>The widget should show only the form initially, with no success or error messages visible.</p>
+            <button class="test-btn primary" onclick="testInitialState()">🔍 Test Initial State</button>
+            <button class="test-btn" onclick="FeedbackWidget.open()">📝 Open Widget</button>
+            <button class="test-btn" onclick="FeedbackWidget.close()">❌ Close Widget</button>
+            <div id="initial-state-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Form State Transitions</h3>
+            <p>Test different form states manually:</p>
+            <button class="test-btn" onclick="simulateSuccess()">✅ Simulate Success</button>
+            <button class="test-btn" onclick="simulateError()">❌ Simulate Error</button>
+            <button class="test-btn" onclick="resetToForm()">🔄 Reset to Form</button>
+            <div id="transition-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Element Visibility Check</h3>
+            <p>Check the actual visibility of form elements:</p>
+            <button class="test-btn" onclick="checkElementVisibility()">👁️ Check Visibility</button>
+            <div id="visibility-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Log</h3>
+            <div id="test-log"></div>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Form State Test',
+            placeholder: 'Test form state...',
+            showName: true,
+            showEmail: true
+        });
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('test-log');
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[TEST] ${message}`);
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function testInitialState() {
+            log('Testing initial widget state...');
+            
+            // Open the widget first
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                const form = document.getElementById('feedback-widget-form');
+                const success = document.getElementById('feedback-widget-success');
+                const error = document.getElementById('feedback-widget-error');
+                
+                const formVisible = form && window.getComputedStyle(form).display !== 'none';
+                const successVisible = success && window.getComputedStyle(success).display !== 'none';
+                const errorVisible = error && window.getComputedStyle(error).display !== 'none';
+                
+                log(`Form visible: ${formVisible}`);
+                log(`Success visible: ${successVisible}`);
+                log(`Error visible: ${errorVisible}`);
+                
+                const isCorrect = formVisible && !successVisible && !errorVisible;
+                
+                showResult('initial-state-result', 
+                    `Initial State Test: ${isCorrect ? 'PASSED' : 'FAILED'}<br>
+                    Form: ${formVisible ? '✅ Visible' : '❌ Hidden'}<br>
+                    Success: ${successVisible ? '❌ Visible (WRONG!)' : '✅ Hidden'}<br>
+                    Error: ${errorVisible ? '❌ Visible (WRONG!)' : '✅ Hidden'}`,
+                    isCorrect ? 'success' : 'error'
+                );
+            }, 500);
+        }
+
+        function simulateSuccess() {
+            log('Simulating success state...');
+            // Access the internal showSuccess function (for testing only)
+            if (window.FeedbackWidget && window.FeedbackWidget.showSuccess) {
+                window.FeedbackWidget.showSuccess();
+            } else {
+                // Manually trigger success state
+                const form = document.getElementById('feedback-widget-form');
+                const success = document.getElementById('feedback-widget-success');
+                if (form) form.style.display = 'none';
+                if (success) success.style.display = 'block';
+            }
+            showResult('transition-result', 'Success state simulated', 'success');
+        }
+
+        function simulateError() {
+            log('Simulating error state...');
+            // Access the internal showError function (for testing only)
+            if (window.FeedbackWidget && window.FeedbackWidget.showError) {
+                window.FeedbackWidget.showError('Test error message');
+            } else {
+                // Manually trigger error state
+                const form = document.getElementById('feedback-widget-form');
+                const error = document.getElementById('feedback-widget-error');
+                const errorText = document.getElementById('feedback-widget-error-text');
+                if (form) form.style.display = 'none';
+                if (error) error.style.display = 'block';
+                if (errorText) errorText.textContent = 'Test error message';
+            }
+            showResult('transition-result', 'Error state simulated', 'error');
+        }
+
+        function resetToForm() {
+            log('Resetting to form state...');
+            const form = document.getElementById('feedback-widget-form');
+            const success = document.getElementById('feedback-widget-success');
+            const error = document.getElementById('feedback-widget-error');
+            
+            if (form) {
+                form.style.display = 'block';
+                form.style.visibility = 'visible';
+            }
+            if (success) {
+                success.style.display = 'none';
+                success.style.visibility = 'hidden';
+            }
+            if (error) {
+                error.style.display = 'none';
+                error.style.visibility = 'hidden';
+            }
+            
+            showResult('transition-result', 'Reset to form state', 'info');
+        }
+
+        function checkElementVisibility() {
+            log('Checking element visibility...');
+            
+            const form = document.getElementById('feedback-widget-form');
+            const success = document.getElementById('feedback-widget-success');
+            const error = document.getElementById('feedback-widget-error');
+            
+            const results = [];
+            
+            if (form) {
+                const style = window.getComputedStyle(form);
+                results.push(`Form: display=${style.display}, visibility=${style.visibility}`);
+            } else {
+                results.push('Form: Element not found');
+            }
+            
+            if (success) {
+                const style = window.getComputedStyle(success);
+                results.push(`Success: display=${style.display}, visibility=${style.visibility}`);
+            } else {
+                results.push('Success: Element not found');
+            }
+            
+            if (error) {
+                const style = window.getComputedStyle(error);
+                results.push(`Error: display=${style.display}, visibility=${style.visibility}`);
+            } else {
+                results.push('Error: Element not found');
+            }
+            
+            showResult('visibility-result', results.join('<br>'), 'info');
+            log('Visibility check completed');
+        }
+
+        // Log initial state
+        log('Form state test page loaded');
+        
+        // Check initial state after a short delay
+        setTimeout(() => {
+            log('Checking initial state after page load...');
+            checkElementVisibility();
+        }, 1000);
+    </script>
+</body>
+</html>

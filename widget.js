@@ -103,6 +103,15 @@
         // Set up theme detection and listener
         setupThemeListener();
         updateThemeClass(detectTheme());
+
+        // Set up viewport change listeners for mobile height adjustment
+        setupViewportListeners();
+
+        // Initial mobile height adjustment
+        adjustMobileHeight();
+
+        // Ensure form is in correct initial state
+        ensureInitialFormState();
     }
     
     /**
@@ -323,6 +332,9 @@
 
         isOpen = true;
 
+        // Adjust mobile height before opening
+        adjustMobileHeight();
+
         // Prevent body scroll
         preventBodyScroll(true);
 
@@ -473,10 +485,24 @@
     function showSuccess() {
         const form = document.getElementById('feedback-widget-form');
         const success = document.getElementById('feedback-widget-success');
-        
-        form.style.display = 'none';
-        success.style.display = 'block';
-        
+        const error = document.getElementById('feedback-widget-error');
+
+        // Hide form and error, show success
+        if (form) {
+            form.style.display = 'none';
+            form.style.visibility = 'hidden';
+        }
+        if (error) {
+            error.style.display = 'none';
+            error.style.visibility = 'hidden';
+        }
+        if (success) {
+            success.style.display = 'block';
+            success.style.visibility = 'visible';
+        }
+
+        console.log('[FeedbackWidget] Success message shown');
+
         // Auto close after 3 seconds
         setTimeout(() => {
             closePanel();
@@ -488,13 +514,27 @@
      */
     function showError(message) {
         const form = document.getElementById('feedback-widget-form');
+        const success = document.getElementById('feedback-widget-success');
         const error = document.getElementById('feedback-widget-error');
         const errorText = document.getElementById('feedback-widget-error-text');
-        
-        errorText.textContent = message;
-        form.style.display = 'none';
-        error.style.display = 'block';
-        
+
+        // Hide form and success, show error
+        if (form) {
+            form.style.display = 'none';
+            form.style.visibility = 'hidden';
+        }
+        if (success) {
+            success.style.display = 'none';
+            success.style.visibility = 'hidden';
+        }
+        if (error && errorText) {
+            errorText.textContent = message;
+            error.style.display = 'block';
+            error.style.visibility = 'visible';
+        }
+
+        console.log('[FeedbackWidget] Error message shown:', message);
+
         // Auto hide after 5 seconds
         setTimeout(() => {
             resetForm();
@@ -510,15 +550,52 @@
         const error = document.getElementById('feedback-widget-error');
 
         // Ensure only form is visible
-        if (form) form.style.display = 'block';
-        if (success) success.style.display = 'none';
-        if (error) error.style.display = 'none';
+        if (form) {
+            form.style.display = 'block';
+            form.style.visibility = 'visible';
+        }
+        if (success) {
+            success.style.display = 'none';
+            success.style.visibility = 'hidden';
+        }
+        if (error) {
+            error.style.display = 'none';
+            error.style.visibility = 'hidden';
+        }
 
         // Reset form data
         if (form) {
             form.reset();
             showLoading(false);
         }
+    }
+
+    /**
+     * Ensure form is in correct initial state (called after widget creation)
+     */
+    function ensureInitialFormState() {
+        // Wait for DOM elements to be available
+        setTimeout(() => {
+            const form = document.getElementById('feedback-widget-form');
+            const success = document.getElementById('feedback-widget-success');
+            const error = document.getElementById('feedback-widget-error');
+
+            // Force initial state - form visible, messages hidden
+            if (form) {
+                form.style.display = 'block';
+                form.style.visibility = 'visible';
+            }
+            if (success) {
+                success.style.display = 'none';
+                success.style.visibility = 'hidden';
+            }
+            if (error) {
+                error.style.display = 'none';
+                error.style.visibility = 'hidden';
+            }
+
+            console.log('[FeedbackWidget] Initial form state ensured');
+        }, 50); // Small delay to ensure DOM is ready
     }
 
     /**
@@ -648,6 +725,79 @@
         if (widgetContainer) {
             widgetContainer.classList.remove('feedback-widget-theme-light', 'feedback-widget-theme-dark');
             widgetContainer.classList.add(`feedback-widget-theme-${theme}`);
+        }
+    }
+
+    /**
+     * Adjust widget height for mobile devices based on viewport
+     */
+    function adjustMobileHeight() {
+        if (!feedbackPanel || window.innerWidth >= 768) return;
+
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Very conservative approach for small screens
+        let maxHeight, topMargin, bottomMargin;
+
+        if (viewportHeight < 500) {
+            // Landscape phones or very small screens
+            maxHeight = Math.max(300, viewportHeight - 80);
+            topMargin = 20;
+            bottomMargin = 20;
+        } else if (viewportHeight < 600) {
+            // Small portrait phones
+            maxHeight = Math.max(400, viewportHeight - 120);
+            topMargin = 40;
+            bottomMargin = 40;
+        } else {
+            // Standard mobile screens
+            maxHeight = Math.max(500, viewportHeight - 160);
+            topMargin = 60;
+            bottomMargin = 80;
+        }
+
+        // Apply dynamic styles
+        feedbackPanel.style.setProperty('max-height', `${maxHeight}px`, 'important');
+        feedbackPanel.style.setProperty('top', `${topMargin}px`, 'important');
+        feedbackPanel.style.setProperty('bottom', `${bottomMargin}px`, 'important');
+
+        // Log for debugging
+        console.log(`[FeedbackWidget] Mobile height adjusted: ${viewportWidth}x${viewportHeight} -> maxHeight: ${maxHeight}px`);
+    }
+
+    /**
+     * Handle viewport changes (resize, orientation change)
+     */
+    function handleViewportChange() {
+        // Debounce rapid resize events
+        clearTimeout(window.feedbackWidgetResizeTimeout);
+        window.feedbackWidgetResizeTimeout = setTimeout(() => {
+            adjustMobileHeight();
+            dispatchWidgetEvent('viewportChanged', {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                isMobile: window.innerWidth < 768
+            });
+        }, 100);
+    }
+
+    /**
+     * Set up viewport change listeners
+     */
+    function setupViewportListeners() {
+        // Listen for window resize
+        window.addEventListener('resize', handleViewportChange);
+
+        // Listen for orientation change (mobile devices)
+        window.addEventListener('orientationchange', () => {
+            // Delay to allow orientation change to complete
+            setTimeout(handleViewportChange, 200);
+        });
+
+        // Listen for visual viewport changes (mobile keyboard, etc.)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
         }
     }
 
@@ -822,15 +972,15 @@
                 will-change: transform, opacity !important;
                 visibility: hidden !important;
 
-                /* Mobile-first sizing - full width with margins */
+                /* Mobile-first sizing with safe margins and reduced height */
                 width: calc(100vw - 32px) !important;
                 max-width: calc(100vw - 32px) !important;
-                max-height: calc(100vh - 100px) !important;
+                max-height: calc(100vh - 160px) !important; /* Reduced from 100px to 160px for safety */
                 left: 16px !important;
                 right: 16px !important;
                 bottom: 80px !important;
-                top: auto !important;
-                transform-origin: bottom center !important;
+                top: 60px !important; /* Add safe top margin */
+                transform-origin: center !important; /* Changed from bottom center */
             }
 
             /* Panel animation states */
@@ -873,8 +1023,12 @@
             .feedback-widget-panel-content {
                 padding: 20px !important;
                 height: 100% !important;
+                max-height: 100% !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
+                display: flex !important;
+                flex-direction: column !important;
+                box-sizing: border-box !important;
             }
 
             /* Header */
@@ -1043,12 +1197,20 @@
 
             /* ===== MOBILE-FIRST MESSAGES ===== */
             .feedback-widget-message {
-                display: flex !important;
                 gap: 12px !important;
                 padding: 16px !important;
                 border-radius: 8px !important;
                 margin-top: 16px !important;
                 align-items: flex-start !important;
+                /* Default hidden state */
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            /* Only show messages when explicitly displayed */
+            .feedback-widget-message[style*="display: block"] {
+                display: flex !important;
+                visibility: visible !important;
             }
 
             .feedback-widget-success {
@@ -1082,6 +1244,78 @@
             }
 
             /* ===== RESPONSIVE BREAKPOINTS ===== */
+
+            /* Very small screens (height < 600px) - Extra conservative */
+            @media (max-height: 600px) {
+                .feedback-widget-panel {
+                    max-height: calc(100vh - 120px) !important;
+                    top: 40px !important;
+                    bottom: 40px !important;
+                }
+
+                .feedback-widget-panel-content {
+                    padding: 16px !important;
+                }
+
+                .feedback-widget-header {
+                    margin-bottom: 12px !important;
+                }
+
+                .feedback-widget-title {
+                    font-size: 16px !important;
+                }
+
+                .feedback-widget-actions {
+                    margin-top: 12px !important;
+                }
+
+                .feedback-widget-btn {
+                    padding: 12px 16px !important;
+                    min-height: 44px !important;
+                }
+            }
+
+            /* Extra small screens (height < 500px) - Landscape phones */
+            @media (max-height: 500px) {
+                .feedback-widget-panel {
+                    max-height: calc(100vh - 80px) !important;
+                    top: 20px !important;
+                    bottom: 20px !important;
+                    border-radius: 8px !important;
+                }
+
+                .feedback-widget-panel-content {
+                    padding: 12px !important;
+                }
+
+                .feedback-widget-header {
+                    margin-bottom: 8px !important;
+                }
+
+                .feedback-widget-title {
+                    font-size: 14px !important;
+                }
+
+                .feedback-widget-field {
+                    gap: 4px !important;
+                }
+
+                .feedback-widget-textarea {
+                    min-height: 60px !important;
+                    max-height: 80px !important;
+                }
+
+                .feedback-widget-actions {
+                    margin-top: 8px !important;
+                    gap: 8px !important;
+                }
+
+                .feedback-widget-btn {
+                    padding: 10px 12px !important;
+                    min-height: 40px !important;
+                    font-size: 14px !important;
+                }
+            }
 
             /* Tablet styles (768px and up) */
             @media (min-width: 768px) {
