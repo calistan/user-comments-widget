@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation Enhancements Test - Feedback Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .test-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .test-btn {
+            padding: 10px 16px;
+            margin: 5px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .test-btn.primary {
+            background: #00C2A8;
+            color: white;
+            border-color: #00C2A8;
+        }
+        
+        .test-btn.primary:hover {
+            background: #00a58e;
+        }
+        
+        .test-btn.danger {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .test-btn.danger:hover {
+            background: #dc2626;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .status.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status.warning {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+        
+        .test-instructions {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .test-instructions h4 {
+            color: #0369a1;
+            margin: 0 0 8px 0;
+        }
+        
+        .test-instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-instructions li {
+            margin-bottom: 4px;
+            color: #0c4a6e;
+        }
+        
+        .honeypot-demo {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        
+        .honeypot-demo h4 {
+            color: #92400e;
+            margin: 0 0 8px 0;
+        }
+        
+        .honeypot-demo code {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔒 Validation Enhancements Test</h1>
+        <p>Test the newly added honeypot field and real-time validation features.</p>
+        
+        <div class="test-section">
+            <h3>Real-time Validation Test</h3>
+            <p>Test validation feedback as you type and when leaving fields:</p>
+            
+            <button class="test-btn primary" onclick="testRealTimeValidation()">⚡ Test Real-time Validation</button>
+            
+            <div class="test-instructions">
+                <h4>Real-time Validation Instructions:</h4>
+                <ol>
+                    <li>Click "Test Real-time Validation" to open the widget</li>
+                    <li><strong>Comment field:</strong> Type less than 3 characters, then click outside the field</li>
+                    <li><strong>Name field:</strong> Type "John123" (invalid characters), then click outside</li>
+                    <li><strong>Email field:</strong> Type "invalid-email" (no @), then click outside</li>
+                    <li>Notice errors appear immediately when you leave each field</li>
+                    <li>Start typing in any field with an error - the error should disappear</li>
+                </ol>
+            </div>
+            
+            <div id="realtime-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Honeypot Spam Prevention Test</h3>
+            <p>Test the hidden honeypot field for bot detection:</p>
+            
+            <button class="test-btn danger" onclick="testHoneypotField()">🍯 Test Honeypot (Simulate Bot)</button>
+            <button class="test-btn" onclick="inspectHoneypotField()">🔍 Inspect Honeypot Field</button>
+            
+            <div class="honeypot-demo">
+                <h4>How Honeypot Works:</h4>
+                <p>A hidden field named <code>website</code> is added to the form. Legitimate users can't see or fill it, but spam bots often auto-fill all fields. If this field contains any value, the submission is rejected as spam.</p>
+                <p><strong>Location:</strong> The field is positioned off-screen with <code>left: -9999px</code> and <code>opacity: 0</code></p>
+                <p><strong>Accessibility:</strong> Marked with <code>aria-hidden="true"</code> and <code>tabindex="-1"</code></p>
+            </div>
+            
+            <div id="honeypot-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Combined Validation Test</h3>
+            <p>Test all validation features together:</p>
+            
+            <button class="test-btn primary" onclick="testAllValidation()">🧪 Test All Validation</button>
+            
+            <div class="status info">
+                <strong>This test will:</strong><br>
+                • Open the widget with pre-filled invalid data<br>
+                • Trigger real-time validation on all fields<br>
+                • Show how validation errors appear and clear<br>
+                • Demonstrate the complete validation flow
+            </div>
+            
+            <div id="combined-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Validation Summary</h3>
+            <div class="status success">
+                <strong>✅ Implemented Validation Features:</strong><br>
+                • Required field checking (comment)<br>
+                • Email format validation (RFC 5322 compliant)<br>
+                • Comment length limits (3-2000 characters)<br>
+                • Basic spam prevention (pattern detection)<br>
+                • Honeypot field (bot detection)<br>
+                • Real-time validation feedback (blur/input events)<br>
+                • Field-level error messages with styling<br>
+                • Rate limiting (2s cooldown, 5/hour limit)
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        // Initialize the widget
+        FeedbackWidget.init({
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Validation Test',
+            placeholder: 'Test validation features...',
+            showName: true,
+            showEmail: true
+        });
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function testRealTimeValidation() {
+            console.log('Testing real-time validation...');
+            
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                showResult('realtime-result', 
+                    'Widget opened! Now follow the instructions above to test real-time validation. ' +
+                    'Try entering invalid data in each field and clicking outside to see immediate feedback.',
+                    'info'
+                );
+            }, 500);
+        }
+
+        function testHoneypotField() {
+            console.log('Testing honeypot field (simulating bot behavior)...');
+            
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                // Fill the form including the honeypot field (simulating bot behavior)
+                const commentField = document.getElementById('feedback-widget-comment');
+                const nameField = document.getElementById('feedback-widget-name');
+                const emailField = document.getElementById('feedback-widget-email');
+                const honeypotField = document.getElementById('feedback-widget-website');
+                
+                if (commentField) commentField.value = 'This is a bot-generated comment';
+                if (nameField) nameField.value = 'Bot Name';
+                if (emailField) emailField.value = 'bot@spam.com';
+                if (honeypotField) {
+                    honeypotField.value = 'http://spam-site.com'; // Bot fills honeypot
+                    console.log('Honeypot field filled (simulating bot):', honeypotField.value);
+                }
+                
+                showResult('honeypot-result', 
+                    'Form filled with honeypot data (simulating bot). Now submit the form - it should be rejected as spam.',
+                    'warning'
+                );
+                
+                // Auto-submit after a moment
+                setTimeout(() => {
+                    const form = document.getElementById('feedback-widget-form');
+                    if (form) {
+                        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                        form.dispatchEvent(submitEvent);
+                    }
+                }, 2000);
+            }, 500);
+        }
+
+        function inspectHoneypotField() {
+            console.log('Inspecting honeypot field...');
+            
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                const honeypotField = document.getElementById('feedback-widget-website');
+                const honeypotContainer = document.querySelector('.feedback-widget-honeypot');
+                
+                if (honeypotField && honeypotContainer) {
+                    const fieldStyles = window.getComputedStyle(honeypotContainer);
+                    
+                    showResult('honeypot-result', 
+                        `<strong>Honeypot Field Inspection:</strong><br>
+                        Field ID: ${honeypotField.id}<br>
+                        Field Name: ${honeypotField.name}<br>
+                        Position: ${fieldStyles.position}<br>
+                        Left: ${fieldStyles.left}<br>
+                        Opacity: ${fieldStyles.opacity}<br>
+                        Visibility: ${fieldStyles.visibility}<br>
+                        <em>Check browser dev tools to see the hidden field in the DOM</em>`,
+                        'info'
+                    );
+                } else {
+                    showResult('honeypot-result', 'Honeypot field not found!', 'error');
+                }
+            }, 500);
+        }
+
+        function testAllValidation() {
+            console.log('Testing all validation features...');
+            
+            FeedbackWidget.open();
+            
+            setTimeout(() => {
+                // Fill form with various invalid data
+                const commentField = document.getElementById('feedback-widget-comment');
+                const nameField = document.getElementById('feedback-widget-name');
+                const emailField = document.getElementById('feedback-widget-email');
+                
+                if (commentField) commentField.value = 'Hi'; // Too short
+                if (nameField) nameField.value = 'Test123'; // Invalid characters
+                if (emailField) emailField.value = 'invalid-email'; // Invalid format
+                
+                showResult('combined-result', 
+                    'Form filled with invalid data. Now:<br>' +
+                    '1. Click outside each field to trigger real-time validation<br>' +
+                    '2. Fix the errors by typing valid data<br>' +
+                    '3. Watch errors disappear as you type<br>' +
+                    '4. Submit the form when all fields are valid',
+                    'info'
+                );
+            }, 500);
+        }
+
+        // Event listeners for widget events
+        window.addEventListener('feedbackWidget:submitted', function(e) {
+            console.log('Form submitted successfully:', e.detail);
+            showResult('combined-result', 'Form submitted successfully! All validation passed.', 'success');
+        });
+
+        window.addEventListener('feedbackWidget:submitError', function(e) {
+            console.log('Form submission error:', e.detail);
+            if (e.detail.error.includes('Submission failed')) {
+                showResult('honeypot-result', 'Honeypot test successful! Bot submission was blocked.', 'success');
+            } else {
+                showResult('combined-result', `Submission error: ${e.detail.error}`, 'error');
+            }
+        });
+
+        console.log('Validation enhancements test page loaded');
+    </script>
+</body>
+</html>

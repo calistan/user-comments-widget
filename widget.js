@@ -199,15 +199,27 @@
                         <label for="feedback-widget-email" class="feedback-widget-label">
                             Email (Optional)
                         </label>
-                        <input 
-                            type="email" 
-                            id="feedback-widget-email" 
-                            name="email" 
-                            class="feedback-widget-input" 
+                        <input
+                            type="email"
+                            id="feedback-widget-email"
+                            name="email"
+                            class="feedback-widget-input"
                             placeholder="your@email.com"
                         />
                     </div>
                     ` : ''}
+
+                    <!-- Honeypot field for spam prevention -->
+                    <div class="feedback-widget-honeypot" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                        <label for="feedback-widget-website">Website (leave blank)</label>
+                        <input
+                            type="text"
+                            id="feedback-widget-website"
+                            name="website"
+                            tabindex="-1"
+                            autocomplete="off"
+                        />
+                    </div>
                     
                     <div class="feedback-widget-actions">
                         <button type="button" class="feedback-widget-btn feedback-widget-btn-secondary" id="feedback-widget-cancel">
@@ -316,6 +328,9 @@
                 togglePanel();
             }
         });
+
+        // Set up real-time validation after panel is created
+        setTimeout(setupRealTimeValidation, 100);
     }
     
     /**
@@ -554,6 +569,95 @@
     }
 
     /**
+     * Clear validation error for a specific field
+     */
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('feedback-widget-field-invalid');
+            const error = field.parentNode.querySelector('.feedback-widget-field-error');
+            if (error) {
+                error.remove();
+            }
+        }
+    }
+
+    /**
+     * Set up real-time validation for form fields
+     */
+    function setupRealTimeValidation() {
+        const commentField = document.getElementById('feedback-widget-comment');
+        const nameField = document.getElementById('feedback-widget-name');
+        const emailField = document.getElementById('feedback-widget-email');
+
+        // Real-time comment validation
+        if (commentField) {
+            // Validate on blur (when user leaves field)
+            commentField.addEventListener('blur', function() {
+                const value = this.value;
+                clearFieldError('feedback-widget-comment');
+
+                if (value.trim()) { // Only validate if not empty (required check happens on submit)
+                    const validation = validateComment(value);
+                    if (!validation.valid) {
+                        showFieldError('feedback-widget-comment', validation.message);
+                    }
+                }
+            });
+
+            // Clear error on input (when user starts typing)
+            commentField.addEventListener('input', function() {
+                if (this.classList.contains('feedback-widget-field-invalid')) {
+                    clearFieldError('feedback-widget-comment');
+                }
+            });
+        }
+
+        // Real-time name validation
+        if (nameField) {
+            nameField.addEventListener('blur', function() {
+                const value = this.value;
+                clearFieldError('feedback-widget-name');
+
+                if (value.trim()) { // Only validate if not empty (name is optional)
+                    const validation = validateName(value);
+                    if (!validation.valid) {
+                        showFieldError('feedback-widget-name', validation.message);
+                    }
+                }
+            });
+
+            nameField.addEventListener('input', function() {
+                if (this.classList.contains('feedback-widget-field-invalid')) {
+                    clearFieldError('feedback-widget-name');
+                }
+            });
+        }
+
+        // Real-time email validation
+        if (emailField) {
+            emailField.addEventListener('blur', function() {
+                const value = this.value;
+                clearFieldError('feedback-widget-email');
+
+                if (value.trim()) { // Only validate if not empty (email is optional)
+                    if (!validateEmail(value)) {
+                        showFieldError('feedback-widget-email', 'Please enter a valid email address.');
+                    }
+                }
+            });
+
+            emailField.addEventListener('input', function() {
+                if (this.classList.contains('feedback-widget-field-invalid')) {
+                    clearFieldError('feedback-widget-email');
+                }
+            });
+        }
+
+        console.log('[FeedbackWidget] Real-time validation set up');
+    }
+
+    /**
      * Handle form submission with comprehensive validation
      */
     function handleFormSubmit(e) {
@@ -573,6 +677,14 @@
         const comment = formData.get('comment') || '';
         const name = formData.get('name') || '';
         const email = formData.get('email') || '';
+        const honeypot = formData.get('website') || '';
+
+        // Honeypot spam check - if filled, it's likely a bot
+        if (honeypot.trim() !== '') {
+            console.log('[FeedbackWidget] Honeypot triggered - potential spam bot detected');
+            showError('Submission failed. Please try again.');
+            return;
+        }
 
         // Validate comment (required)
         const commentValidation = validateComment(comment);
@@ -1407,6 +1519,36 @@
             .feedback-widget-field-error::before {
                 content: "⚠" !important;
                 font-size: 10px !important;
+            }
+
+            /* ===== HONEYPOT FIELD (SPAM PREVENTION) ===== */
+            .feedback-widget-honeypot {
+                position: absolute !important;
+                left: -9999px !important;
+                top: -9999px !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                visibility: hidden !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                z-index: -1 !important;
+            }
+
+            .feedback-widget-honeypot input {
+                position: absolute !important;
+                left: -9999px !important;
+                top: -9999px !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+                border: none !important;
+                background: transparent !important;
+                color: transparent !important;
+                font-size: 0 !important;
+                line-height: 0 !important;
+                outline: none !important;
+                box-shadow: none !important;
             }
 
             /* ===== MOBILE-FIRST ACTIONS ===== */

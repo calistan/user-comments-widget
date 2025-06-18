@@ -149,6 +149,7 @@
                 <button class="demo-btn" onclick="checkWidgetState()">Check State</button>
                 <button class="demo-btn" onclick="openResponsiveTest()">📱 Responsive Test</button>
                 <button class="demo-btn" onclick="openFormSubmissionTest()">📝 Form Test</button>
+                <button class="demo-btn" onclick="openValidationTest()">🔒 Validation Test</button>
             </div>
         </div>
         
@@ -238,7 +239,9 @@
                 <li>✅ <strong>High contrast and reduced motion accessibility support</strong></li>
                 <li>✅ <strong>ARIA attributes for screen readers</strong></li>
                 <li>✅ <strong>Focus management and restoration</strong></li>
-                <li>✅ <strong>Comprehensive form validation (required fields, email format, spam detection)</strong></li>
+                <li>✅ <strong>Comprehensive form validation (required fields, email format, length limits, spam detection)</strong></li>
+                <li>✅ <strong>Honeypot field for advanced spam bot prevention</strong></li>
+                <li>✅ <strong>Real-time validation feedback (blur/input events)</strong></li>
                 <li>✅ <strong>AJAX submission to backend with timeout and error handling</strong></li>
                 <li>✅ <strong>Auto-detection of website URL and domain</strong></li>
                 <li>✅ <strong>Client-side rate limiting (2s cooldown, 5/hour limit)</strong></li>
@@ -408,6 +411,10 @@
 
         function openFormSubmissionTest() {
             window.open('test-form-submission.html', '_blank');
+        }
+
+        function openValidationTest() {
+            window.open('test-validation-enhancements.html', '_blank');
         }
 
         function updateCodeExample() {
