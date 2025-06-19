@@ -25,7 +25,7 @@
         }
 
         // If running in production (any other domain)
-        return 'https://user-comments.onrender.com/submit_comment';
+        return 'https://user-comments-backend.onrender.com/submit_comment';
     }
 
     // Default configuration
