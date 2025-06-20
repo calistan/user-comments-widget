@@ -934,47 +934,130 @@
     }
     
     /**
-     * Show/hide loading state
+     * Show/hide loading state with enhanced animations
      */
     function showLoading(loading) {
         const submitBtn = document.getElementById('feedback-widget-submit');
         const submitText = submitBtn.querySelector('.feedback-widget-submit-text');
         const loadingIcon = submitBtn.querySelector('.feedback-widget-loading');
-        
+
         if (loading) {
             submitBtn.disabled = true;
-            submitText.style.display = 'none';
-            loadingIcon.style.display = 'inline-flex';
+            submitBtn.style.opacity = '0.8';
+            submitBtn.style.transform = 'scale(0.98)';
+
+            // Fade out text and fade in loading icon
+            if (submitText) {
+                submitText.style.transition = 'opacity 0.2s ease';
+                submitText.style.opacity = '0';
+                setTimeout(() => {
+                    submitText.style.display = 'none';
+                }, 200);
+            }
+
+            if (loadingIcon) {
+                loadingIcon.style.display = 'inline-flex';
+                loadingIcon.style.opacity = '0';
+                loadingIcon.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    loadingIcon.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    loadingIcon.style.opacity = '1';
+                    loadingIcon.style.transform = 'scale(1)';
+                }, 100);
+            }
+
+            // Add pulse animation to button
+            submitBtn.style.animation = 'pulse 2s ease-in-out infinite';
+
         } else {
             submitBtn.disabled = false;
-            submitText.style.display = 'inline';
-            loadingIcon.style.display = 'none';
+            submitBtn.style.opacity = '1';
+            submitBtn.style.transform = 'scale(1)';
+            submitBtn.style.animation = 'none';
+
+            // Fade out loading icon and fade in text
+            if (loadingIcon) {
+                loadingIcon.style.transition = 'opacity 0.2s ease';
+                loadingIcon.style.opacity = '0';
+                setTimeout(() => {
+                    loadingIcon.style.display = 'none';
+                }, 200);
+            }
+
+            if (submitText) {
+                submitText.style.display = 'inline';
+                submitText.style.opacity = '0';
+                setTimeout(() => {
+                    submitText.style.transition = 'opacity 0.3s ease';
+                    submitText.style.opacity = '1';
+                }, 100);
+            }
         }
     }
     
     /**
-     * Show success message
+     * Show success message with animation
      */
     function showSuccess() {
         const form = document.getElementById('feedback-widget-form');
         const success = document.getElementById('feedback-widget-success');
         const error = document.getElementById('feedback-widget-error');
+        const panelContent = document.querySelector('.feedback-widget-panel-content');
 
-        // Hide form and error, show success
+        // Store the current panel content height before hiding the form
+        let currentHeight = null;
+        if (panelContent && form) {
+            currentHeight = panelContent.offsetHeight;
+        }
+
+        // Hide form and error with fade out animation
         if (form) {
-            form.style.display = 'none';
-            form.style.visibility = 'hidden';
+            form.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            form.style.opacity = '0';
+            form.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                form.style.display = 'none';
+                form.style.visibility = 'hidden';
+            }, 200);
         }
         if (error) {
             error.style.display = 'none';
             error.style.visibility = 'hidden';
         }
+
+        // Show success with slide-in animation
         if (success) {
+            // Reset any previous animations
+            success.style.animation = 'none';
+            success.style.opacity = '0';
+            success.style.transform = 'translateY(20px)';
             success.style.display = 'block';
             success.style.visibility = 'visible';
+
+            // Trigger animation after a brief delay
+            setTimeout(() => {
+                success.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                success.style.animation = 'slideInUp 0.4s ease-out forwards';
+                success.style.opacity = '1';
+                success.style.transform = 'translateY(0)';
+            }, 250);
         }
 
-        console.log('[FeedbackWidget] Success message shown');
+        // Maintain the panel content height to prevent expansion
+        if (panelContent && currentHeight) {
+            panelContent.style.height = `${currentHeight}px`;
+            panelContent.style.justifyContent = 'center';
+            panelContent.style.alignItems = 'center';
+        }
+
+        console.log('[FeedbackWidget] Success message shown with animation');
+
+        // Dispatch success animation event
+        dispatchWidgetEvent('successShown', {
+            animated: true,
+            autoClose: true,
+            duration: 3000
+        });
 
         // Auto close after 3 seconds and reset form
         setTimeout(() => {
@@ -987,30 +1070,72 @@
     }
     
     /**
-     * Show error message
+     * Show error message with animation
      */
     function showError(message) {
         const form = document.getElementById('feedback-widget-form');
         const success = document.getElementById('feedback-widget-success');
         const error = document.getElementById('feedback-widget-error');
         const errorText = document.getElementById('feedback-widget-error-text');
+        const panelContent = document.querySelector('.feedback-widget-panel-content');
 
-        // Hide form and success, show error
+        // Store the current panel content height before hiding the form
+        let currentHeight = null;
+        if (panelContent && form) {
+            currentHeight = panelContent.offsetHeight;
+        }
+
+        // Hide form and success with fade out animation
         if (form) {
-            form.style.display = 'none';
-            form.style.visibility = 'hidden';
+            form.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            form.style.opacity = '0';
+            form.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                form.style.display = 'none';
+                form.style.visibility = 'hidden';
+            }, 200);
         }
         if (success) {
             success.style.display = 'none';
             success.style.visibility = 'hidden';
         }
+
+        // Show error with shake animation
         if (error && errorText) {
             errorText.textContent = message;
+
+            // Reset any previous animations
+            error.style.animation = 'none';
+            error.style.opacity = '0';
+            error.style.transform = 'translateY(20px)';
             error.style.display = 'block';
             error.style.visibility = 'visible';
+
+            // Trigger animation after a brief delay
+            setTimeout(() => {
+                error.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                error.style.animation = 'slideInUp 0.4s ease-out forwards, pulse 0.6s ease-in-out';
+                error.style.opacity = '1';
+                error.style.transform = 'translateY(0)';
+            }, 250);
         }
 
-        console.log('[FeedbackWidget] Error message shown:', message);
+        // Maintain the panel content height to prevent expansion
+        if (panelContent && currentHeight) {
+            panelContent.style.height = `${currentHeight}px`;
+            panelContent.style.justifyContent = 'center';
+            panelContent.style.alignItems = 'center';
+        }
+
+        console.log('[FeedbackWidget] Error message shown with animation:', message);
+
+        // Dispatch error animation event
+        dispatchWidgetEvent('errorShown', {
+            animated: true,
+            message: message,
+            autoHide: true,
+            duration: 5000
+        });
 
         // Auto hide after 5 seconds
         setTimeout(() => {
@@ -1042,25 +1167,42 @@
         const form = document.getElementById('feedback-widget-form');
         const success = document.getElementById('feedback-widget-success');
         const error = document.getElementById('feedback-widget-error');
+        const panelContent = document.querySelector('.feedback-widget-panel-content');
 
-        // Ensure only form is visible
+        // Ensure only form is visible with fade-in animation
         if (form) {
             form.style.display = 'block';
             form.style.visibility = 'visible';
+            form.style.opacity = '1';
+            form.style.transform = 'translateY(0)';
+            form.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
         }
         if (success) {
             success.style.display = 'none';
             success.style.visibility = 'hidden';
+            success.style.animation = 'none';
+            success.style.opacity = '0';
+            success.style.transform = 'translateY(20px)';
         }
         if (error) {
             error.style.display = 'none';
             error.style.visibility = 'hidden';
+            error.style.animation = 'none';
+            error.style.opacity = '0';
+            error.style.transform = 'translateY(20px)';
+        }
+
+        // Reset panel content styling to original state
+        if (panelContent) {
+            panelContent.style.height = '';
+            panelContent.style.justifyContent = '';
+            panelContent.style.alignItems = '';
         }
 
         // Reset form data and clear errors
         resetFormData();
 
-        console.log('[FeedbackWidget] Full form reset');
+        console.log('[FeedbackWidget] Full form reset with animations');
     }
 
     /**
@@ -1761,6 +1903,44 @@
                 to { transform: rotate(360deg); }
             }
 
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+
+            @keyframes pulse {
+                0%, 100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.8;
+                    transform: scale(1.05);
+                }
+            }
+
+            @keyframes slideInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
             /* ===== MOBILE-FIRST MESSAGES ===== */
             .feedback-widget-message {
                 gap: 12px !important;
@@ -1771,12 +1951,28 @@
                 /* Default hidden state */
                 display: none !important;
                 visibility: hidden !important;
+                opacity: 0 !important;
+                transform: translateY(20px) !important;
+                transition: opacity 0.4s ease, transform 0.4s ease !important;
             }
 
             /* Only show messages when explicitly displayed */
             .feedback-widget-message[style*="display: block"] {
                 display: flex !important;
                 visibility: visible !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                text-align: left !important;
+                padding: 20px !important;
+                gap: 12px !important;
+                /* Remove min-height to prevent panel expansion */
+                min-height: auto !important;
+                /* Ensure the message doesn't expand the panel */
+                flex-shrink: 0 !important;
+                /* Animation properties */
+                opacity: 1 !important;
+                transform: translateY(0) !important;
             }
 
             .feedback-widget-success {
