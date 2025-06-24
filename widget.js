@@ -37,7 +37,8 @@
         title: 'Feedback',
         showEmail: true,
         showName: true,
-        apiUrl: getDefaultApiUrl()
+        apiUrl: getDefaultApiUrl(),
+        widgetId: null // Required: must be provided during initialization
     };
     
     // Widget state
@@ -64,6 +65,13 @@
     function init(options = {}) {
         config = { ...DEFAULT_CONFIG, ...options };
 
+        // Validate required widget_id
+        if (!config.widgetId) {
+            console.error('[FeedbackWidget] ERROR: widgetId is required for initialization');
+            console.error('[FeedbackWidget] Usage: FeedbackWidget.init({ widgetId: "your-widget-id" })');
+            return;
+        }
+
         // Auto-detect website domain
         config.websiteUrl = window.location.origin;
         config.websiteDomain = window.location.hostname;
@@ -73,6 +81,7 @@
         console.log(`[FeedbackWidget] Initializing in ${isLocal ? 'LOCAL' : 'PRODUCTION'} mode`);
         console.log(`[FeedbackWidget] API URL: ${config.apiUrl}`);
         console.log(`[FeedbackWidget] Website: ${config.websiteUrl}`);
+        console.log(`[FeedbackWidget] Widget ID: ${config.widgetId}`);
 
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
@@ -723,10 +732,9 @@
             comment: comment.trim(),
             name: name.trim(),
             email: email.trim(),
-            company: config.websiteDomain, // Auto-detected from website
+            widget_id: config.widgetId, // Required widget ID
             website_url: config.websiteUrl,
             user_agent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
             widget_version: '1.0.0'
         };
 
