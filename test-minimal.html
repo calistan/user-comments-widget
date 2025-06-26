@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Widget Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f0f0f0;
+            min-height: 100vh;
+        }
+        .content {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Minimal Widget Test</h1>
+        <p>This page tests the feedback widget with minimal setup.</p>
+        
+        <div>
+            <button class="test-btn" onclick="FeedbackWidget.toggle()">Toggle Widget</button>
+            <button class="test-btn" onclick="FeedbackWidget.open()">Open Widget</button>
+            <button class="test-btn" onclick="FeedbackWidget.close()">Close Widget</button>
+            <button class="test-btn" onclick="checkWidget()">Check Widget State</button>
+        </div>
+        
+        <div id="debug-info" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 4px;">
+            <h3>Debug Info:</h3>
+            <div id="debug-output">Loading...</div>
+        </div>
+        
+        <p>Look for the feedback button in the bottom-right corner of the page.</p>
+    </div>
+
+    <!-- Load the feedback widget -->
+    <script src="widget.js"></script>
+    <script>
+        function checkWidget() {
+            const debugOutput = document.getElementById('debug-output');
+            const container = document.getElementById('feedback-widget-container');
+            const button = document.getElementById('feedback-widget-button');
+            
+            debugOutput.innerHTML = `
+                <div><strong>Widget Container:</strong> ${container ? 'Found' : 'NOT FOUND'}</div>
+                <div><strong>Widget Button:</strong> ${button ? 'Found' : 'NOT FOUND'}</div>
+                <div><strong>Widget State:</strong> ${typeof FeedbackWidget.isOpen === 'function' ? (FeedbackWidget.isOpen() ? 'Open' : 'Closed') : 'Unknown'}</div>
+                <div><strong>FeedbackWidget Object:</strong> ${typeof FeedbackWidget}</div>
+                <div><strong>Container Classes:</strong> ${container ? container.className : 'N/A'}</div>
+                <div><strong>Button Classes:</strong> ${button ? button.className : 'N/A'}</div>
+                <div><strong>Button Style Display:</strong> ${button ? button.style.display || 'default' : 'N/A'}</div>
+                <div><strong>Container Style Display:</strong> ${container ? container.style.display || 'default' : 'N/A'}</div>
+            `;
+        }
+
+        // Initialize the widget with demo settings
+        console.log('Initializing widget...');
+        FeedbackWidget.init({
+            widgetId: 'test-widget-id',
+            position: 'bottom-right',
+            primaryColor: '#00C2A8',
+            title: 'Feedback',
+            placeholder: 'Share your feedback...',
+            showName: true,
+            showEmail: true
+        });
+
+        // Check widget state after initialization
+        setTimeout(() => {
+            checkWidget();
+            console.log('Widget initialization check completed');
+        }, 1000);
+    </script>
+</body>
+</html>

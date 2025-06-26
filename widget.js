@@ -1242,9 +1242,16 @@
     }
 
     /**
-     * Prevent or restore body scroll
+     * Prevent or restore body scroll (only on mobile to avoid page jumps)
      */
     function preventBodyScroll(prevent) {
+        // Only prevent scroll on mobile devices to avoid page jumping on desktop
+        const isMobile = window.innerWidth <= 768;
+
+        if (!isMobile) {
+            return; // Skip scroll prevention on desktop
+        }
+
         if (prevent) {
             // Store current scroll position
             window.feedbackWidgetScrollY = window.scrollY;
@@ -2102,6 +2109,35 @@
                     font-size: 14px !important;
                 }
 
+                /* Position-specific styles for tablet and desktop */
+                .feedback-widget-bottom-right {
+                    bottom: 20px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    top: auto !important;
+                }
+
+                .feedback-widget-bottom-left {
+                    bottom: 20px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    top: auto !important;
+                }
+
+                .feedback-widget-top-right {
+                    top: 20px !important;
+                    right: 20px !important;
+                    left: auto !important;
+                    bottom: auto !important;
+                }
+
+                .feedback-widget-top-left {
+                    top: 20px !important;
+                    left: 20px !important;
+                    right: auto !important;
+                    bottom: auto !important;
+                }
+
                 .feedback-widget-panel {
                     width: 380px !important;
                     max-width: calc(100vw - 40px) !important;
@@ -2139,35 +2175,6 @@
 
                 .feedback-widget-panel {
                     width: 400px !important;
-                }
-
-                /* Position-specific styles for desktop */
-                .feedback-widget-bottom-right {
-                    bottom: 20px !important;
-                    right: 20px !important;
-                    left: auto !important;
-                    top: auto !important;
-                }
-
-                .feedback-widget-bottom-left {
-                    bottom: 20px !important;
-                    left: 20px !important;
-                    right: auto !important;
-                    top: auto !important;
-                }
-
-                .feedback-widget-top-right {
-                    top: 20px !important;
-                    right: 20px !important;
-                    left: auto !important;
-                    bottom: auto !important;
-                }
-
-                .feedback-widget-top-left {
-                    top: 20px !important;
-                    left: 20px !important;
-                    right: auto !important;
-                    bottom: auto !important;
                 }
 
                 /* Panel positioning for desktop */

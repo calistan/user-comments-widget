@@ -207,6 +207,7 @@
 &lt;script src="<span class="highlight">https://your-project-name.vercel.app/widget.js</span>"&gt;&lt;/script&gt;<br>
 &lt;script&gt;<br>
 &nbsp;&nbsp;FeedbackWidget.init({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">widgetId: 'your-widget-id'</span>, // Required: Get from admin dashboard<br>
 &nbsp;&nbsp;&nbsp;&nbsp;position: '<span id="code-position">bottom-right</span>',<br>
 &nbsp;&nbsp;&nbsp;&nbsp;primaryColor: '<span id="code-color">#00C2A8</span>',<br>
 &nbsp;&nbsp;&nbsp;&nbsp;title: '<span id="code-title">Feedback</span>',<br>
@@ -324,6 +325,7 @@
     <script>
         // Initialize the widget with default settings
         FeedbackWidget.init({
+            widgetId: 'demo-widget-id', // Required for widget to function
             position: 'bottom-right',
             primaryColor: '#00C2A8',
             title: 'Feedback',
@@ -387,6 +389,7 @@
 
             // Reinitialize with new config
             FeedbackWidget.init({
+                widgetId: 'demo-widget-id', // Required for widget to function
                 position,
                 primaryColor,
                 title,
