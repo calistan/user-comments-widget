@@ -54,7 +54,7 @@ When users integrate the widget, they need to include the widgetId:
 ## Backend Configuration
 The widget automatically detects the environment:
 - **Local development**: Uses `http://localhost:5000/submit_comment`
-- **Production**: Uses `https://user-comments-backend.onrender.com/submit_comment`
+- **Production**: Uses `https://user-comments-backend-gwos.onrender.com/submit_comment`
 
 ## Files Modified
 - `index.html`: Added widgetId to initialization

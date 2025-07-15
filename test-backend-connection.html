@@ -240,7 +240,7 @@
 
             const apiUrl = isLocal ?
                 'http://localhost:5000/submit_comment' :
-                'https://user-comments.onrender.com/submit_comment';
+                'https://user-comments-backend-gwos.onrender.com/submit_comment';
 
             const environment = isLocal ? 'LOCAL DEVELOPMENT' : 'PRODUCTION';
 
@@ -300,7 +300,7 @@
                         `• Verify backend is accessible at <code>http://localhost:5000</code>`;
                 } else {
                     errorMessage += `<strong>Production Issues:</strong><br>` +
-                        `• Check if <code>https://user-comments.onrender.com</code> is accessible<br>` +
+                        `• Check if <code>https://user-comments-backend-gwos.onrender.com</code> is accessible<br>` +
                         `• Verify your Render deployment is active<br>` +
                         `• Check Render logs for errors`;
                 }

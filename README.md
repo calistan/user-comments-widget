@@ -176,7 +176,7 @@ Update your integration code:
 The widget automatically detects whether it's running locally or in production:
 
 - **Local Development**: Uses `http://localhost:5000/submit_comment`
-- **Production**: Uses `https://user-comments.onrender.com/submit_comment`
+- **Production**: Uses `https://user-comments-backend-gwos.onrender.com/submit_comment`
 
 ### Running Locally
 
